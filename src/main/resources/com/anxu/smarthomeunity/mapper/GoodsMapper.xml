@@ -16,50 +16,6 @@
         set p.goods_score = ROUND(c.avg_score, 1),
             p.goods_comment_count = COUNT(c.goods_id)
     </update>
-        <!--    查询商品列表 -->
-    <select id="queryGoods" resultType="com.anxu.smarthomeunity.pojo.pub.goods.Goods">
-        SELECT
-        goods_id, goods_name, goods_type, goods_price,
-        goods_stock, goods_sales, goods_intro, goods_status,
-        goods_score, goods_comment_count,create_time, update_time
-        FROM pub_goods
-        WHERE goods_status = 1 <!-- 只查上架商品，避免查下架数据 -->
-        <!-- 商品名称：模糊查询（非空才拼接） -->
-        <if test="goodsName != null and goodsName.trim() != ''">
-            AND goods_name LIKE CONCAT('%', #{goodsName}, '%')
-        </if>
-        <!-- 商品类型：精确匹配 -->
-        <if test="goodsType != null and goodsType.trim() != ''">
-            AND goods_type = #{goodsType}
-        </if>
-        <!-- 排序规则：匹配前端传递的 sortRule 值 -->
-        <choose>
-            <when test="sortRule == 'by_price_desc'">
-                ORDER BY goods_price ASC <!-- 便宜优先（价格升序） -->
-            </when>
-            <when test="sortRule == 'by_price_asc'">
-                ORDER BY goods_price DESC <!-- 贵的优先（价格降序） -->
-            </when>
-            <when test="sortRule == 'by_sales'">
-                ORDER BY goods_sales DESC <!-- 销量优先 -->
-            </when>
-            <when test="sortRule == 'by_rating'">
-                ORDER BY goods_score DESC, <!-- 评分优先 -->
-            </when>
-            <otherwise>
-                ORDER BY update_time DESC <!-- 默认：最新更新优先 -->
-            </otherwise>
-        </choose>
-    </select>
-        <!--    查询单个商品详情 -->
-    <select id="selectByPrimaryKey" resultType="com.anxu.smarthomeunity.pojo.pub.goods.Goods">
-        SELECT
-        goods_id, goods_name, goods_type, goods_price,
-        goods_stock, goods_sales, goods_intro, goods_status,
-        goods_score, goods_comment_count,create_time, update_time
-        FROM pub_goods
-        WHERE goods_id = #{goodsId}
-    </select>
 
 </mapper>
 

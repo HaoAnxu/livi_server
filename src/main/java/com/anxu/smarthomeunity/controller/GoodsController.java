@@ -22,13 +22,13 @@ public class GoodsController {
         PageResult pageResult = goodsService.queryGoods(goodsQuery);
         return Result.success(pageResult);
     }
-    //    更新并重新统计商品评分(5min执行一次)
+
     @GetMapping("/goods/resetScore")
     public Result resetScore(){
         log.info("更新商品评分和评论数量");
         Integer updateProductCount = goodsService.resetScore();
         if(updateProductCount > 0) {
-            return Result.success("更新商品评分和评论数量成功，更新商品数量：" + updateProductCount);
+            return Result.success(updateProductCount);
         } else {
             return Result.error("更新商品评分和评论数量失败");
         }

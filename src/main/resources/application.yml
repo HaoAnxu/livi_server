@@ -19,8 +19,12 @@ spring:
           starttls:
             enable: true
     protocol: smtp
-mybatis:
-  configuration:
-    map-underscore-to-camel-case: true
+
+# 配置JWT的签名密钥
 jwt:
   sign-key: MDYxMU1hcmNodzc=
+
+mybatis-plus:
+  type-aliases-package: com.anxu.smarthomeunity.pojo
+  configuration:
+    map-underscore-to-camel-case: true
