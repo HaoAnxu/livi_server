@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GoodsCommentImage {
-    private int imageId;//商品评论图片id
-    private int commentId;//商品评论id
+    private Integer imageId;//商品评论图片id
+    private Integer commentId;//商品评论id
     private String imageUrl;//商品评论图片url
     private LocalDateTime createTime;//创建时间
     private LocalDateTime updateTime;//更新时间

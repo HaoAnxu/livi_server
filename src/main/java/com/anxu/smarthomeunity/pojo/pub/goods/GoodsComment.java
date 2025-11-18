@@ -10,14 +10,14 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GoodsComment {
-    private int commentId;//商品评论id
-    private int goodsId;//商品id
-    private int userId;//用户id
+    private Integer commentId;//商品评论id
+    private Integer goodsId;//商品id
+    private Integer userId;//用户id
     private String commentContent;//评论内容
-    private int commentScore;//评论分数
-    private int commentLikeNum;//评论点赞数
-    private int commentReplyNum;//评论回复数
-    private int commentStatus;//评论状态-0表示删除，1表示正常
+    private Integer commentScore;//评论分数
+    private Integer commentLikeNum;//评论点赞数
+    private Integer commentReplyNum;//评论回复数
+    private Integer commentStatus;//评论状态-0表示删除，1表示正常
     private LocalDateTime createTime;//创建时间
     private LocalDateTime updateTime;//更新时间
 }

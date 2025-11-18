@@ -10,9 +10,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PostLike {
-    private int likeId;//帖子点赞id
-    private int postId;//帖子id
-    private int userId;//用户id
+    private Integer likeId;//帖子点赞id
+    private Integer postId;//帖子id
+    private Integer userId;//用户id
     private LocalDateTime createTime;//创建时间
     private LocalDateTime updateTime;//更新时间
 }

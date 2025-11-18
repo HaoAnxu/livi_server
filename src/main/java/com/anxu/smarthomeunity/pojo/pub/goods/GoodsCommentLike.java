@@ -10,9 +10,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GoodsCommentLike {
-    private int likeId;//商品评论点赞id
-    private int commentId;//商品评论id
-    private int userId;//用户id
+    private Integer likeId;//商品评论点赞id
+    private Integer commentId;//商品评论id
+    private Integer userId;//用户id
     private LocalDateTime createTime;//创建时间
     private LocalDateTime updateTime;//更新时间
 }

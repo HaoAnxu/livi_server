@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PostImage {
-    private int imageId;//帖子配图id
-    private int postId;//帖子id
+    private Integer imageId;//帖子配图id
+    private Integer postId;//帖子id
     private String imageUrl;//图片url
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

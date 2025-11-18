@@ -11,6 +11,6 @@ public class GoodsQuery {
     private String goodsName;
     private String goodsType;
     private String sortRule;
-    private int page = 1;
-    private int pageSize = 10;
+    private Integer page = 1;
+    private Integer pageSize = 10;
 }

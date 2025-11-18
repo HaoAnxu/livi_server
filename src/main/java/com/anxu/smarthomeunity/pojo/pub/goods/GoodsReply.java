@@ -10,12 +10,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GoodsReply {
-    private int replyId;//商品评论回复id
-    private int commentId;//商品评论id
-    private int userId;//用户id
-    private int replyToUserId;//回复人id
+    private Integer replyId;//商品评论回复id
+    private Integer commentId;//商品评论id
+    private Integer userId;//用户id
+    private Integer replyToUserId;//回复人id
     private String replyContent;//商品评论回复内容
-    private int replyStatus;//回复状态-0表示删除，1表示正常
+    private Integer replyStatus;//回复状态-0表示删除，1表示正常
     private LocalDateTime createTime;//创建时间
     private LocalDateTime updateTime;//更新时间
 }
