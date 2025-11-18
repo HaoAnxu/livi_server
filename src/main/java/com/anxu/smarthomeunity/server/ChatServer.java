@@ -1,12 +1,12 @@
 package com.anxu.smarthomeunity.server;
 
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.anxu.smarthomeunity.pojo.websocket.ChatMessage;
 import com.anxu.smarthomeunity.pojo.websocket.ResultMsg;
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 // 注解说明：@ServerEndpoint 定义WebSocket端点地址（前端后续要连这个地址）
 // {userId} 是路径参数，用于区分不同用户（比如前端传 userId=1001，就会被捕获）
 @Component
+@Slf4j
 @ServerEndpoint("/ws/chat/{userId}")
 public class ChatServer {
     // 存储所有在线的WebSocket连接：key=userId，value=当前连接对象
@@ -37,23 +38,23 @@ public class ChatServer {
      * 连接建立成功时出发（前端发起连接后，这里会触发）
      */
     @OnOpen
+    //userId 路径参数，用于获取前端传递的用户ID
     public void onOpen(Session session, @PathParam("userId") String userId){
         this.session = session;
         this.userId = userId;
         //把当前连接存入map（用户上线）
         onlineUsers.put(userId,this);
-        System.out.println("用户[" + userId + "]连接成功，当前在线人数：" + onlineUsers.size());
+        log.info("用户[{}]连接成功，当前在线人数：{}", userId, onlineUsers.size());
         ResultMsg successMsg = new ResultMsg("success", "✅ 连接成功！你是用户[" + userId + "]");
         sendMessage(JSON.toJSONString(successMsg));
     }
-
     /**
      * 收到前端消息时触发（前端发消息，后端这里接收）
      * @param message 前端发送的消息
      */
     @OnMessage
     public void onMessage(String message){
-        System.out.println("用户[" + userId + "]发送消息：" + message);
+        log.info("用户[{}]发送消息：{}", userId, message);
         try {
             if("ping".equals(message)){
                 sendMessage("pong");
@@ -63,7 +64,6 @@ public class ChatServer {
             String fromUserId = chatMessage.getFromUserId();
             String toUserId = chatMessage.getToUserId();
             String content = chatMessage.getContent();
-            String type = chatMessage.getType();
 
             if(!userId.equals(fromUserId)){
                 ResultMsg errorMsg = new ResultMsg("error", "你不是发送者[" + fromUserId + "]，不能发送消息！");
@@ -92,7 +92,6 @@ public class ChatServer {
             sendMessage(JSON.toJSONString(errorMsg));
         }
     }
-
     /**
      * 连接关闭时触发（前端断开连接、刷新页面、关闭浏览器时执行）
      */
@@ -100,22 +99,19 @@ public class ChatServer {
     public void onClose() {
         // 把当前连接从map中移除（用户下线）
         onlineUsers.remove(userId);
-        System.out.println("用户[" + userId + "]断开连接，当前在线人数：" + onlineUsers.size());
+        log.info("用户[{}]断开连接，当前在线人数：{}", userId, onlineUsers.size());
         ResultMsg successMsg = new ResultMsg("success", "✅ 连接已断开！你是用户[" + userId + "]");
         sendMessage(JSON.toJSONString(successMsg));
     }
-
     /**
      * 连接出错时触发（比如网络异常）
      */
     @OnError
     public void onError(Session session, Throwable error) {
-        System.out.println("用户[" + userId + "]连接出错：" + error.getMessage());
+        log.error("用户[{}]连接出错：{}", userId, error.getMessage());
         ResultMsg errorMsg = new ResultMsg("error", "连接出错：" + error.getMessage());
         sendMessage(JSON.toJSONString(errorMsg));
-        error.printStackTrace();
     }
-
     /**
      * 给当前用户发消息（内部工具方法）
      */

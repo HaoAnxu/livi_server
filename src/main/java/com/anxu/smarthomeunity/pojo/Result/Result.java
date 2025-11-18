@@ -2,6 +2,8 @@ package com.anxu.smarthomeunity.pojo.Result;
 
 import lombok.Data;
 
+import java.util.Map;
+
 @Data
 public class Result {
     private Integer code;//业务状态码，1 表示成功，0 表示失败
@@ -31,5 +33,4 @@ public class Result {
         r.msg = msg;
         return r;
     }
-
 }
