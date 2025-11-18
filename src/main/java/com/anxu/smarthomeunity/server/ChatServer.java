@@ -1,7 +1,9 @@
-package com.anxu.smarthomeunity.api;
+package com.anxu.smarthomeunity.server;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.anxu.smarthomeunity.pojo.websocket.ChatMessage;
+import com.anxu.smarthomeunity.pojo.websocket.ResultMsg;
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
@@ -11,7 +13,7 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * WebSocket服务类
+ * WS_Chat服务类
  *
  * @Author: haoanxu
  * @Date: 2025/11/17 14:39
@@ -20,10 +22,10 @@ import java.util.concurrent.ConcurrentHashMap;
 // {userId} 是路径参数，用于区分不同用户（比如前端传 userId=1001，就会被捕获）
 @Component
 @ServerEndpoint("/ws/chat/{userId}")
-public class WebSocketServer {
+public class ChatServer {
     // 存储所有在线的WebSocket连接：key=userId，value=当前连接对象
     // 存储在线用户：key=userId，value=当前连接对象（线程安全）
-    private static ConcurrentHashMap<String, WebSocketServer> onlineUsers = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, ChatServer> onlineUsers = new ConcurrentHashMap<>();
 
     //当前用户的WebSocket会话
     private Session session;
@@ -41,7 +43,8 @@ public class WebSocketServer {
         //把当前连接存入map（用户上线）
         onlineUsers.put(userId,this);
         System.out.println("用户[" + userId + "]连接成功，当前在线人数：" + onlineUsers.size());
-        sendMessage("✅ 连接成功！你是用户[" + userId + "]"); // 给当前用户发欢迎消息
+        ResultMsg successMsg = new ResultMsg("success", "✅ 连接成功！你是用户[" + userId + "]");
+        sendMessage(JSON.toJSONString(successMsg));
     }
 
     /**
@@ -60,25 +63,33 @@ public class WebSocketServer {
             String fromUserId = chatMessage.getFromUserId();
             String toUserId = chatMessage.getToUserId();
             String content = chatMessage.getContent();
+            String type = chatMessage.getType();
 
             if(!userId.equals(fromUserId)){
-                sendMessage("❌ 你不是发送者[" + fromUserId + "]，不能发送消息！");
+                ResultMsg errorMsg = new ResultMsg("error", "你不是发送者[" + fromUserId + "]，不能发送消息！");
+                sendMessage(JSON.toJSONString(errorMsg));
                 return;
             }
             //给目标用户发消息
-            WebSocketServer targetUser = onlineUsers.get(toUserId);
+            ChatServer targetUser = onlineUsers.get(toUserId);
             if (targetUser != null) {
-                // 给接收者发消息（包含发送者信息）
-                targetUser.sendMessage(String.format("📩 来自用户[%s]的消息：%s", fromUserId, content));
-                // 给发送者回“发送成功”确认
-                sendMessage(String.format("✅ 消息已发送给用户[%s]：%s", toUserId, content));
+                // 目标用户在线，组装消息对象并发送JSON
+                ChatMessage CM = new ChatMessage();
+                CM.setType("chat_msg");
+                CM.setFromUserId(fromUserId);
+                CM.setToUserId(toUserId);
+                CM.setContent(content);
+                targetUser.sendMessage(JSON.toJSONString(CM));
+                // 给发送者回“发送成功”（组装JSON）
+                ResultMsg successMsg = new ResultMsg("success", "消息已发送给用户[" + toUserId + "]");
+                sendMessage(JSON.toJSONString(successMsg));
             } else {
-                // 目标用户不在线
-                sendMessage(String.format("❌ 用户[%s]不在线或不存在！", toUserId));
+                ResultMsg errorMsg = new ResultMsg("error", "用户[" + toUserId + "]不在线");
+                sendMessage(JSON.toJSONString(errorMsg));
             }
         } catch (Exception e) {
-            System.out.println("消息解析失败（请传JSON格式）：" + e.getMessage());
-            sendMessage("❌ 消息格式错误！请传JSON：{\"fromUserId\":\"你的ID\",\"toUserId\":\"目标ID\",\"content\":\"消息内容\"}");
+            ResultMsg errorMsg = new ResultMsg("error", "消息格式错误：" + e.getMessage());
+            sendMessage(JSON.toJSONString(errorMsg));
         }
     }
 
@@ -90,6 +101,8 @@ public class WebSocketServer {
         // 把当前连接从map中移除（用户下线）
         onlineUsers.remove(userId);
         System.out.println("用户[" + userId + "]断开连接，当前在线人数：" + onlineUsers.size());
+        ResultMsg successMsg = new ResultMsg("success", "✅ 连接已断开！你是用户[" + userId + "]");
+        sendMessage(JSON.toJSONString(successMsg));
     }
 
     /**
@@ -98,6 +111,8 @@ public class WebSocketServer {
     @OnError
     public void onError(Session session, Throwable error) {
         System.out.println("用户[" + userId + "]连接出错：" + error.getMessage());
+        ResultMsg errorMsg = new ResultMsg("error", "连接出错：" + error.getMessage());
+        sendMessage(JSON.toJSONString(errorMsg));
         error.printStackTrace();
     }
 
@@ -109,7 +124,8 @@ public class WebSocketServer {
             //getBasicRemote() 是「同步发送」,sendText(...)：是发送 “文本消息” 的方法
             this.session.getBasicRemote().sendText(message);
         } catch (IOException e) {
-            System.out.println("给用户[" + userId + "]发消息失败：" + e.getMessage());
+            ResultMsg errorMsg = new ResultMsg("error", "给用户[" + userId + "]发消息失败：" + e.getMessage());
+            sendMessage(JSON.toJSONString(errorMsg));
         }
     }
     
