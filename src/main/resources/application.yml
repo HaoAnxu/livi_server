@@ -23,6 +23,8 @@ spring:
 # 配置JWT的签名密钥
 jwt:
   sign-key: MDYxMU1hcmNodzc=
+  # 过期时间，单位毫秒
+  expire: 3600000
 
 mybatis-plus:
   type-aliases-package: com.anxu.smarthomeunity.pojo

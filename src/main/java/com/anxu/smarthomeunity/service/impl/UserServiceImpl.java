@@ -3,7 +3,7 @@ package com.anxu.smarthomeunity.service.impl;
 import com.anxu.smarthomeunity.mapper.UserMapper;
 import com.anxu.smarthomeunity.pojo.user.UserInfo;
 import com.anxu.smarthomeunity.service.UserService;
-import com.anxu.smarthomeunity.util.JwtUtils;
+import com.anxu.smarthomeunity.util.JwtStaticProxy;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailSender;
@@ -27,8 +27,6 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserMapper userMapper;
     @Autowired
-    private JwtUtils jwtUtils;
-    @Autowired
     private MailSender mailSender;
 
     //    用户登录
@@ -51,7 +49,7 @@ public class UserServiceImpl implements UserService {
         Map<String,Object> dataMap = new HashMap<>();
         dataMap.put("id",user.getId());
         dataMap.put("username",user.getUsername());
-        return jwtUtils.generateJwt(dataMap);
+        return JwtStaticProxy.generateJwt(dataMap);
     }
     //    用户注册
     @Override

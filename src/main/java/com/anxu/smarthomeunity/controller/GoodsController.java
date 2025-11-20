@@ -23,6 +23,7 @@ public class GoodsController {
         return Result.success(pageResult);
     }
 
+    //    更新商品评分和评论数量
     @GetMapping("/goods/resetScore")
     public Result resetScore(){
         log.info("更新商品评分和评论数量");

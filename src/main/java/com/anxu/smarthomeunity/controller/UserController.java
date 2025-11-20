@@ -30,8 +30,8 @@ public class UserController {
         }
         Result result = new Result();
         result.setCode(1);
-        result.setMsg("登录成功");
-        result.setData(token);
+        result.setMsg(token);
+        result.setData(userInfo.getUsername());
         return result;
     }
     //注册
@@ -74,6 +74,12 @@ public class UserController {
         }
         // 验证码校验成功后，删除Redis中的验证码
         redisTemplate.delete("verify_code:" + email);
+        return Result.success();
+    }
+
+    //用户中心
+    @GetMapping("/permission/user/userCenter")
+    public Result userCenter(@RequestParam Integer userId){
         return Result.success();
     }
 }
