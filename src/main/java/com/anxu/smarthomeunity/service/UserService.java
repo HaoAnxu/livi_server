@@ -1,6 +1,6 @@
 package com.anxu.smarthomeunity.service;
 
-import com.anxu.smarthomeunity.pojo.user.UserInfo;
+import com.anxu.smarthomeunity.model.entity.user.UserInfo;
 
 public interface UserService {
     //    登录

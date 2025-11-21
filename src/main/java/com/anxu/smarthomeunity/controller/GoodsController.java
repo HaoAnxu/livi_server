@@ -1,12 +1,12 @@
 package com.anxu.smarthomeunity.controller;
 
-import com.anxu.smarthomeunity.pojo.pub.goods.Goods;
+import com.anxu.smarthomeunity.model.entity.goods.Goods;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import com.anxu.smarthomeunity.pojo.Result.PageResult;
-import com.anxu.smarthomeunity.pojo.Result.Result;
-import com.anxu.smarthomeunity.pojo.pub.goods.query.GoodsQuery;
+import com.anxu.smarthomeunity.model.dto.Result.PageResult;
+import com.anxu.smarthomeunity.model.dto.Result.Result;
+import com.anxu.smarthomeunity.model.dto.pub.goods.query.GoodsQuery;
 import com.anxu.smarthomeunity.service.GoodsService;
 
 @Slf4j

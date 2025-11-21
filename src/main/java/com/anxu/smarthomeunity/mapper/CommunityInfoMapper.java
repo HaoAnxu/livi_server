@@ -1,16 +1,15 @@
 package com.anxu.smarthomeunity.mapper;
 
-import com.anxu.smarthomeunity.model.entity.goods.Goods;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.anxu.smarthomeunity.model.entity.wecommunity.CommunityInfo;
 import org.apache.ibatis.annotations.Mapper;
+
 /**
- * 商品相关Mapper接口
+ * WeCommunity相关Mapper接口
  *
  * @Author: haoanxu
  * @Date: 2025/11/21 11:01
  */
 @Mapper
-public interface GoodsMapper extends BaseMapper<Goods> {
-    //    更新并重新统计商品评分
-    int updateScore();
+public interface CommunityInfoMapper extends BaseMapper<CommunityInfo> {
 }

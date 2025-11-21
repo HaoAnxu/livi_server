@@ -1,7 +1,7 @@
 package com.anxu.smarthomeunity.service.impl;
 
 import com.anxu.smarthomeunity.mapper.UserMapper;
-import com.anxu.smarthomeunity.pojo.user.UserInfo;
+import com.anxu.smarthomeunity.model.entity.user.UserInfo;
 import com.anxu.smarthomeunity.service.UserService;
 import com.anxu.smarthomeunity.util.JwtStaticProxy;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;

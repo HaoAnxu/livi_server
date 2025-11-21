@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anxu.smarthomeunity.mapper.WeCommunityMapper">
+
+    <insert id="insert" parameterType="com.anxu.smarthomeunity.model.entity.wecommunity.CommunityInfoConnect">
+        insert into pub_user_community_info_connect (circle_id, user_id,msg_id,read_status)
+        values (#{circleId}, #{userId}, #{msgId}, #{readStatus})
+    </insert>
+
+    <update id="updateReadStatus">
+        update pub_user_community_info_connect
+        set read_status = 1
+        where msg_id = #{msgId} and user_id = #{userId}
+    </update>
+
+    <select id="selectUserIdsByCircleId" resultType="java.lang.Integer">
+        SELECT user_id FROM pub_community_and_user WHERE circle_id = #{circleId}
+    </select>
+
+    <select id="queryNoReadInfo" resultType="com.anxu.smarthomeunity.model.entity.wecommunity.CommunityInfo">
+        SELECT
+            c.msg_id,
+            c.circle_id,
+            c.from_user_id,
+            c.content,
+            c.msg_type,
+            c.create_time
+        FROM
+            pub_community_info c
+                INNER JOIN
+            pub_user_community_info_connect u
+            ON
+                c.msg_id = u.msg_id
+        WHERE
+            u.circle_id = #{circleId}  -- 筛选当前圈子（关联表的圈子ID）
+          AND u.user_id = #{userId}    -- 筛选当前用户（关联表的用户ID）
+          AND u.read_status = 0        -- 未读消息（离线消息）
+        ORDER BY
+            c.create_time ASC;  -- 按消息创建时间升序，保证补推顺序正确
+    </select>
+</mapper>

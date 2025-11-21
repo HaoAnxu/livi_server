@@ -1,7 +1,7 @@
 package com.anxu.smarthomeunity.controller;
 
-import com.anxu.smarthomeunity.pojo.Result.Result;
-import com.anxu.smarthomeunity.pojo.user.UserInfo;
+import com.anxu.smarthomeunity.model.dto.Result.Result;
+import com.anxu.smarthomeunity.model.entity.user.UserInfo;
 import com.anxu.smarthomeunity.service.UserService;
 import com.anxu.smarthomeunity.util.CodeUtils;
 import lombok.extern.slf4j.Slf4j;

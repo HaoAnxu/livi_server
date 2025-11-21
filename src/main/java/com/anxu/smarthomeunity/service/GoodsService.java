@@ -1,8 +1,8 @@
 package com.anxu.smarthomeunity.service;
 
-import com.anxu.smarthomeunity.pojo.Result.PageResult;
-import com.anxu.smarthomeunity.pojo.pub.goods.Goods;
-import com.anxu.smarthomeunity.pojo.pub.goods.query.GoodsQuery;
+import com.anxu.smarthomeunity.model.dto.Result.PageResult;
+import com.anxu.smarthomeunity.model.entity.goods.Goods;
+import com.anxu.smarthomeunity.model.dto.pub.goods.query.GoodsQuery;
 
 public interface GoodsService {
     //    查询商品列表
