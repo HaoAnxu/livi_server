@@ -1,12 +1,12 @@
 package com.anxu.smarthomeunity.controller;
 
-import com.anxu.smarthomeunity.model.dto.pub.goods.GoodsDetail;
+import com.anxu.smarthomeunity.model.dto.pub.goods.GoodsDetailDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import com.anxu.smarthomeunity.model.dto.Result.PageResult;
-import com.anxu.smarthomeunity.model.dto.Result.Result;
-import com.anxu.smarthomeunity.model.dto.pub.goods.query.GoodsQuery;
+import com.anxu.smarthomeunity.model.Result.PageResult;
+import com.anxu.smarthomeunity.model.Result.Result;
+import com.anxu.smarthomeunity.model.dto.pub.goods.query.GoodsQueryDto;
 import com.anxu.smarthomeunity.service.GoodsService;
 
 @Slf4j
@@ -17,9 +17,9 @@ public class GoodsController {
 
     //    查询商品列表
     @PostMapping("/goods/queryGoods")
-    public Result queryGoods(@RequestBody GoodsQuery goodsQuery){
-        log.info("查询商品信息，参数：{}",goodsQuery);
-        PageResult pageResult = goodsService.queryGoods(goodsQuery);
+    public Result queryGoods(@RequestBody GoodsQueryDto goodsQueryDto){
+        log.info("查询商品信息，参数：{}", goodsQueryDto);
+        PageResult pageResult = goodsService.queryGoods(goodsQueryDto);
         return Result.success(pageResult);
     }
 
@@ -39,7 +39,7 @@ public class GoodsController {
     @PostMapping("/goods/queryGoodsDetail")
     public Result queryGoodsDetail(@RequestParam Long goodsId){
         log.info("查询商品详情，参数：{}",goodsId);
-        GoodsDetail goodsDetail = goodsService.queryGoodsDetail(goodsId);
-        return Result.success(goodsDetail);
+        GoodsDetailDto goodsDetailDto = goodsService.queryGoodsDetail(goodsId);
+        return Result.success(goodsDetailDto);
     }
 }

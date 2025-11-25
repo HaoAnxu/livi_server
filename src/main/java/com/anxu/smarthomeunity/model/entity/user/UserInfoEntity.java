@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @TableName("user_info")
-public class UserInfo {
+public class UserInfoEntity {
     @TableId(value = "id",type = IdType.AUTO)
     private int id;//用户id
 

@@ -1,9 +1,12 @@
 package com.anxu.smarthomeunity.controller;
 
-import com.anxu.smarthomeunity.model.dto.Result.Result;
-import com.anxu.smarthomeunity.model.entity.user.UserInfo;
+import com.alibaba.fastjson2.JSONObject;
+import com.anxu.smarthomeunity.model.Result.Result;
+import com.anxu.smarthomeunity.model.dto.user.UserInfoDto;
+import com.anxu.smarthomeunity.model.entity.user.UserInfoEntity;
 import com.anxu.smarthomeunity.service.UserService;
 import com.anxu.smarthomeunity.util.CodeUtils;
+import com.anxu.smarthomeunity.util.CurrentHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -22,23 +25,24 @@ public class UserController {
 
     //登录
     @PostMapping("/user/login")
-    public Result login(@RequestBody UserInfo userInfo) {
-        log.info("登录请求：{}", userInfo);
-        String token = userService.login(userInfo);
+    public Result login(@RequestBody UserInfoEntity userInfoEntity) {
+        log.info("登录请求：{}", userInfoEntity);
+        String token = userService.login(userInfoEntity);
+        Integer userId = userService.getUserId(userInfoEntity.getUsername());
         if (token == null) {
             return Result.error("登录失败,Token为空");
         }
-        Result result = new Result();
-        result.setCode(1);
-        result.setMsg(token);
-        result.setData(userInfo.getUsername());
-        return result;
+        JSONObject localstorage = new JSONObject();
+        localstorage.put("token", token);
+        localstorage.put("username", userInfoEntity.getUsername());
+        localstorage.put("userId", userId);
+        return Result.success(localstorage);
     }
     //注册
     @PostMapping("/user/register")
-    public Result register(@RequestBody UserInfo userInfo) {
-        log.info("注册请求：{}", userInfo);
-        Integer rows = userService.register(userInfo);
+    public Result register(@RequestBody UserInfoEntity userInfoEntity) {
+        log.info("注册请求：{}", userInfoEntity);
+        Integer rows = userService.register(userInfoEntity);
         if (rows == 0) {
             return Result.error("注册失败");
         }
@@ -77,9 +81,14 @@ public class UserController {
         return Result.success();
     }
 
-    //用户中心
-    @GetMapping("/permission/user/userCenter")
-    public Result userCenter(@RequestParam Integer userId){
-        return Result.success();
+    //用户中心_基础信息查询
+    @GetMapping("/permission/user/userCenter/basicInfo")
+    public Result userCenterBasicInfo(@RequestParam Integer userId){
+        log.info("用户中心_基础信息查询请求：{}", userId);
+        UserInfoDto userInfoDto = userService.getUserInfo(userId);
+        if (userInfoDto == null) {
+            return Result.error("用户不存在");
+        }
+        return Result.success(userInfoDto);
     }
 }

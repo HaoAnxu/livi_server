@@ -126,6 +126,19 @@
             <artifactId>hutool-all</artifactId>
             <version>5.8.40</version>
         </dependency>
+        <!-- MapStruct 核心依赖 -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>1.5.5.Final</version> <!-- 最新稳定版 -->
+        </dependency>
+        <!-- 编译时生成映射代码的处理器 -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-processor</artifactId>
+            <version>1.5.5.Final</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 

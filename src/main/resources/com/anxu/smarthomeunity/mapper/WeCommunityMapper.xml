@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.anxu.smarthomeunity.mapper.WeCommunityMapper">
 
-    <insert id="insert" parameterType="com.anxu.smarthomeunity.model.entity.wecommunity.CommunityInfoConnect">
+    <insert id="insert" parameterType="com.anxu.smarthomeunity.model.entity.wecommunity.CommunityInfoRelaEntity">
         insert into pub_user_community_info_connect (circle_id, user_id,msg_id,read_status)
         values (#{circleId}, #{userId}, #{msgId}, #{readStatus})
     </insert>
@@ -18,7 +18,7 @@
         SELECT user_id FROM pub_community_and_user WHERE circle_id = #{circleId}
     </select>
 
-    <select id="queryNoReadInfo" resultType="com.anxu.smarthomeunity.model.entity.wecommunity.CommunityInfo">
+    <select id="queryNoReadInfo" resultType="com.anxu.smarthomeunity.model.entity.wecommunity.CommunityInfoEntity">
         SELECT
             c.msg_id,
             c.circle_id,

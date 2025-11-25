@@ -10,28 +10,22 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * 商品评论Entity
+ * 商品图片Entity
  *
  * @Author: haoanxu
- * @Date: 2025/11/24 11:00
+ * @Date: 2025/11/24 10:58
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("pub_goods_comment")
-public class GoodsComment {
-    @TableId(value = "comment_id", type = IdType.AUTO)
-    private Long commentId;//商品评论ID
+@TableName("pub_goods_image")
+public class GoodsImageEntity {
+    @TableId(value = "image_id",type = IdType.AUTO)
+    private Long imageId;//商品图片ID
 
-    private Integer goodsId;//商品id,关联商品表
+    private Long goodsId;//商品ID
 
-    private Integer userId;//用户id,关联用户表
-
-    private String commentContent;//评论内容
-
-    private Double commentScore;//评论评分
-
-    private Integer commentLikeNum;//评论点赞数量
+    private String imageUrl;//商品图片URL
 
     private LocalDateTime createTime;//创建时间
 

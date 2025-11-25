@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @TableName("pub_community_info")
-public class CommunityInfo {
+public class CommunityInfoEntity {
     @TableId(value = "msg_id", type = IdType.AUTO)
     private Long msgId; // 消息唯一ID
 

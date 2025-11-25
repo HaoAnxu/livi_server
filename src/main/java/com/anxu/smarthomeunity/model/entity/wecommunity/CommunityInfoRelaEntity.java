@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @TableName("pub_user_community_info_connect")
-public class CommunityInfoConnect {
+public class CommunityInfoRelaEntity {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 

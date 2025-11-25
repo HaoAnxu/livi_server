@@ -1,17 +1,18 @@
 package com.anxu.smarthomeunity.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.anxu.smarthomeunity.mapper.GoodsImageMapper;
 import com.anxu.smarthomeunity.mapper.GoodsMapper;
-import com.anxu.smarthomeunity.model.dto.Result.PageResult;
-import com.anxu.smarthomeunity.model.dto.pub.goods.GoodsDetail;
-import com.anxu.smarthomeunity.model.entity.goods.Goods;
-import com.anxu.smarthomeunity.model.entity.goods.GoodsImage;
+import com.anxu.smarthomeunity.model.Result.PageResult;
+import com.anxu.smarthomeunity.model.dto.pub.goods.GoodsDetailDto;
+import com.anxu.smarthomeunity.model.entity.goods.GoodsEntity;
+import com.anxu.smarthomeunity.model.entity.goods.GoodsImageEntity;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.anxu.smarthomeunity.model.dto.pub.goods.query.GoodsQuery;
+import com.anxu.smarthomeunity.model.dto.pub.goods.query.GoodsQueryDto;
 import com.anxu.smarthomeunity.service.GoodsService;
 
 import java.util.List;
@@ -28,23 +29,23 @@ public class GoodsServiceImpl implements GoodsService {
 
     //    查询商品列表
     @Override
-    public PageResult queryGoods(GoodsQuery goodsQuery) {
+    public PageResult queryGoods(GoodsQueryDto goodsQueryDto) {
         //创建分页对象
-        Page<Goods> page = new Page<>(goodsQuery.getPage(), goodsQuery.getPageSize());
+        Page<GoodsEntity> page = new Page<>(goodsQueryDto.getPage(), goodsQueryDto.getPageSize());
         //构建查询条件
-        QueryWrapper<Goods> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<GoodsEntity> queryWrapper = new QueryWrapper<>();
 //        1.固定条件，只查询上架商品
         queryWrapper.eq("goods_status", 1);
 //        2.动态条件，商品名称，非空才匹配
-        if (goodsQuery.getGoodsName() != null && !goodsQuery.getGoodsName().trim().isEmpty()) {
-            queryWrapper.like("goods_name", goodsQuery.getGoodsName());
+        if (goodsQueryDto.getGoodsName() != null && !goodsQueryDto.getGoodsName().trim().isEmpty()) {
+            queryWrapper.like("goods_name", goodsQueryDto.getGoodsName());
         }
 //        3.动态条件，商品类型，非空才匹配
-        if (goodsQuery.getGoodsType() != null && !goodsQuery.getGoodsType().trim().isEmpty()) {
-            queryWrapper.eq("goods_type", goodsQuery.getGoodsType());
+        if (goodsQueryDto.getGoodsType() != null && !goodsQueryDto.getGoodsType().trim().isEmpty()) {
+            queryWrapper.eq("goods_type", goodsQueryDto.getGoodsType());
         }
 //        4.动态排序
-        String sortRule = goodsQuery.getSortRule();
+        String sortRule = goodsQueryDto.getSortRule();
         if ("by_price_desc".equals(sortRule)) {
             // 价格升序（便宜优先）：orderByAsc(字段名)
             queryWrapper.orderByAsc("goods_price");
@@ -61,7 +62,7 @@ public class GoodsServiceImpl implements GoodsService {
             // 默认：更新时间降序
             queryWrapper.orderByDesc("update_time");
         }
-        Page<Goods> resultPage = this.goodsMapper.selectPage(page, queryWrapper);
+        Page<GoodsEntity> resultPage = this.goodsMapper.selectPage(page, queryWrapper);
         // 转换类型
         return new PageResult(resultPage.getTotal(), resultPage.getRecords());
     }
@@ -81,33 +82,21 @@ public class GoodsServiceImpl implements GoodsService {
 
     //    查询单个商品详情
     @Override
-    public GoodsDetail queryGoodsDetail(Long goodsId) {
+    public GoodsDetailDto queryGoodsDetail(Long goodsId) {
         log.info("查询商品详情，商品id：{}", goodsId);
-        GoodsDetail goodsDetail = new GoodsDetail();
         //先查详情的基础数据
-        Goods goods = this.goodsMapper.selectById(goodsId);
-        if (goods == null) {
+        GoodsEntity goodsEntity = this.goodsMapper.selectById(goodsId);
+        if (goodsEntity == null) {
             log.info("商品不存在，商品id：{}", goodsId);
             return null;
         }
         //将goods转换为goodsDetail
-        goodsDetail.setGoodsId(goods.getGoodsId());
-        goodsDetail.setGoodsName(goods.getGoodsName());
-        goodsDetail.setGoodsType(goods.getGoodsType());
-        goodsDetail.setGoodsPrice(goods.getGoodsPrice());
-        goodsDetail.setGoodsStock(goods.getGoodsStock());
-        goodsDetail.setGoodsSales(goods.getGoodsSales());
-        goodsDetail.setGoodsIntro(goods.getGoodsIntro());
-        goodsDetail.setGoodsStatus(goods.getGoodsStatus());
-        goodsDetail.setGoodsScore(goods.getGoodsScore());
-        goodsDetail.setGoodsCommentCount(goods.getGoodsCommentCount());
-        goodsDetail.setCreateTime(goods.getCreateTime());
-        goodsDetail.setUpdateTime(goods.getUpdateTime());
+        GoodsDetailDto goodsDetailDto = BeanUtil.copyProperties(goodsEntity, GoodsDetailDto.class);
         //再查图片
-        QueryWrapper<GoodsImage> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<GoodsImageEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("goods_id", goodsId);
-        List<GoodsImage> goodsImageList = this.goodsImageMapper.selectList(queryWrapper);
-        goodsDetail.setGoodsImageList(goodsImageList);
-        return goodsDetail;
+        List<GoodsImageEntity> goodsImageEntityList = this.goodsImageMapper.selectList(queryWrapper);
+        goodsDetailDto.setGoodsImageEntityList(goodsImageEntityList);
+        return goodsDetailDto;
     }
 }

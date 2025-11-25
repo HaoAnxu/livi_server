@@ -1,9 +1,9 @@
 package com.anxu.smarthomeunity.controller;
 
 import com.alibaba.fastjson2.JSON;
-import com.anxu.smarthomeunity.model.dto.Result.WebSocketResult;
-import com.anxu.smarthomeunity.model.entity.wecommunity.CommunityInfo;
-import com.anxu.smarthomeunity.model.entity.wecommunity.CommunityInfoConnect;
+import com.anxu.smarthomeunity.model.Result.WebSocketResult;
+import com.anxu.smarthomeunity.model.entity.wecommunity.CommunityInfoEntity;
+import com.anxu.smarthomeunity.model.entity.wecommunity.CommunityInfoRelaEntity;
 import com.anxu.smarthomeunity.service.WeCommunityService;
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -89,13 +88,13 @@ public class WeCommunityController {
             log.info("收到圈子[{}]用户[{}]的消息：{}", circleId, userId, message);
 
             //JSON转消息实体
-            CommunityInfo communityInfo = JSON.parseObject(message, CommunityInfo.class);
+            CommunityInfoEntity communityInfoEntity = JSON.parseObject(message, CommunityInfoEntity.class);
             //补全必要字段（从路径参数获取，前端不用传）
-            communityInfo.setCircleId(circleId);    // 圈子ID
-            communityInfo.setFromUserId(userId);    // 发送者ID
+            communityInfoEntity.setCircleId(circleId);    // 圈子ID
+            communityInfoEntity.setFromUserId(userId);    // 发送者ID
 
             //保存消息到数据库，获取自增msgId
-            Long msgId = weCommunityService.saveGroupMessage(communityInfo);
+            Long msgId = weCommunityService.saveGroupMessage(communityInfoEntity);
             if (msgId == null) {
                 log.error("消息发送失败：数据库存储失败");
                 WebSocketResult webSocketResult = new WebSocketResult("error", "消息发送失败：数据库存储失败");
@@ -103,10 +102,10 @@ public class WeCommunityController {
                 return;
             }
             //把msgId回写到实体，供后面的方法用，无需定义外部变量
-            communityInfo.setMsgId(msgId);
+            communityInfoEntity.setMsgId(msgId);
 
             //广播消息给圈子所有成员（在线+离线）
-            broadcastMessage(communityInfo);
+            broadcastMessage(communityInfoEntity);
 
         } catch (Exception e) {
             log.error("处理消息失败", e);
@@ -167,9 +166,9 @@ public class WeCommunityController {
     /**
      * 广播消息给圈子所有成员（在线+离线）
      */
-    private void broadcastMessage(CommunityInfo communityInfo) {
+    private void broadcastMessage(CommunityInfoEntity communityInfoEntity) {
         try {
-            String messageJson = JSON.toJSONString(communityInfo);
+            String messageJson = JSON.toJSONString(communityInfoEntity);
             WebSocketResult realtimeResult = new WebSocketResult("realtime", messageJson);
             String pushMessage = JSON.toJSONString(realtimeResult);
 
@@ -194,20 +193,20 @@ public class WeCommunityController {
                         //发送带有type的json
                         onlineController.sendMessage(pushMessage);
                         //数据库插入已读关联记录
-                        CommunityInfoConnect connect = new CommunityInfoConnect();
+                        CommunityInfoRelaEntity connect = new CommunityInfoRelaEntity();
                         connect.setUserId(memberId);
-                        connect.setMsgId(communityInfo.getMsgId());
+                        connect.setMsgId(communityInfoEntity.getMsgId());
                         connect.setCircleId(circleId);
                         connect.setReadStatus(1); // 已读
                         weCommunityService.saveUserMessageConnect(connect);
                         log.info("已给在线成员[{}]推送消息并创建已读记录", memberId);
                     } else {
                         // 异常：在线用户无连接，按离线处理
-                        handleOfflineMember(communityInfo, memberId);
+                        handleOfflineMember(communityInfoEntity, memberId);
                     }
                 } else {
                     // 离线成员：创建未读关联记录
-                    handleOfflineMember(communityInfo, memberId);
+                    handleOfflineMember(communityInfoEntity, memberId);
                 }
             }
 
@@ -219,11 +218,11 @@ public class WeCommunityController {
     /**
      * 处理离线成员：创建未读关联记录
      */
-    private void handleOfflineMember(CommunityInfo communityInfo, Integer memberId) {
+    private void handleOfflineMember(CommunityInfoEntity communityInfoEntity, Integer memberId) {
         try {
-            CommunityInfoConnect connect = new CommunityInfoConnect();
+            CommunityInfoRelaEntity connect = new CommunityInfoRelaEntity();
             connect.setUserId(memberId);
-            connect.setMsgId(communityInfo.getMsgId());
+            connect.setMsgId(communityInfoEntity.getMsgId());
             connect.setCircleId(circleId);
             connect.setReadStatus(0); // 未读
             weCommunityService.saveUserMessageConnect(connect);
@@ -239,7 +238,7 @@ public class WeCommunityController {
     private void pushOfflineMessages() {
         try {
             // 1. 查数据库：用户在该圈子的未读消息
-            List<CommunityInfo> offlineMessages = weCommunityService.getOfflineMessages(circleId, userId);
+            List<CommunityInfoEntity> offlineMessages = weCommunityService.getOfflineMessages(circleId, userId);
             if (offlineMessages == null || offlineMessages.isEmpty()) {
                 log.info("用户[{}]圈子[{}]无离线消息", userId, circleId);
                 return;
@@ -247,7 +246,7 @@ public class WeCommunityController {
 
             // 2. 遍历补推
             log.info("给用户[{}]补推离线消息{}条", userId, offlineMessages.size());
-            for (CommunityInfo offlineMsg : offlineMessages) {
+            for (CommunityInfoEntity offlineMsg : offlineMessages) {
                 String messageJson = JSON.toJSONString(offlineMsg);
                 WebSocketResult realtimeResult = new WebSocketResult("offline", messageJson);
                 String pushMessage = JSON.toJSONString(realtimeResult);

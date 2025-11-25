@@ -1,4 +1,4 @@
-package com.anxu.smarthomeunity.model.dto.Result;
+package com.anxu.smarthomeunity.model.Result;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,6 +1,6 @@
 package com.anxu.smarthomeunity.mapper;
 
-import com.anxu.smarthomeunity.model.entity.goods.GoodsImage;
+import com.anxu.smarthomeunity.model.entity.goods.GoodsImageEntity;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -11,5 +11,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @Date: 2025/11/24 11:09
  */
 @Mapper
-public interface GoodsImageMapper extends BaseMapper<GoodsImage> {
+public interface GoodsImageMapper extends BaseMapper<GoodsImageEntity> {
 }

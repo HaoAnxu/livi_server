@@ -1,14 +1,15 @@
 package com.anxu.smarthomeunity.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.anxu.smarthomeunity.mapper.UserMapper;
-import com.anxu.smarthomeunity.model.entity.user.UserInfo;
+import com.anxu.smarthomeunity.model.dto.user.UserInfoDto;
+import com.anxu.smarthomeunity.model.entity.user.UserInfoEntity;
 import com.anxu.smarthomeunity.service.UserService;
 import com.anxu.smarthomeunity.util.JwtUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,18 +38,18 @@ public class UserServiceImpl implements UserService {
 
     //    用户登录
     @Override
-    public String login(UserInfo userInfo) {
+    public String login(UserInfoEntity userInfoEntity) {
         //后端也应有校验
-        Assert.isTrue(StringUtils.hasText(userInfo.getUsername()), "用户名不能为空");
-        Assert.isTrue(StringUtils.hasText(userInfo.getPassword()), "密码不能为空");
+        Assert.isTrue(StringUtils.hasText(userInfoEntity.getUsername()), "用户名不能为空");
+        Assert.isTrue(StringUtils.hasText(userInfoEntity.getPassword()), "密码不能为空");
 
         //根据用户名查询用户
-        QueryWrapper<UserInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("username",userInfo.getUsername());
-        UserInfo user = userMapper.selectOne(queryWrapper);
+        QueryWrapper<UserInfoEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("username", userInfoEntity.getUsername());
+        UserInfoEntity user = userMapper.selectOne(queryWrapper);
         Assert.notNull(user, "用户不存在");
         //校验密码
-        boolean matches = passwordEncoder.matches(userInfo.getPassword(), user.getPassword());
+        boolean matches = passwordEncoder.matches(userInfoEntity.getPassword(), user.getPassword());
         Assert.isTrue(matches, "密码错误");
 
         //登录成功，生成JWT令牌然后返回
@@ -57,32 +58,32 @@ public class UserServiceImpl implements UserService {
 
     //    用户注册
     @Override
-    public Integer register(UserInfo userInfo) {
+    public Integer register(UserInfoEntity userInfoEntity) {
         //后端也应有校验
-        Assert.isTrue(StringUtils.hasText(userInfo.getUsername()), "用户名不能为空");
-        Assert.isTrue(StringUtils.hasText(userInfo.getPassword()), "密码不能为空");
-        Assert.isTrue(StringUtils.hasText(userInfo.getEmail()), "邮箱不能为空");
-        Assert.isTrue(userInfo.getEmail().matches("^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\\.[a-zA-Z0-9-]+)*\\.[a-zA-Z0-9]{2,6}$"), "邮箱格式错误");
-        Assert.isTrue(userInfo.getPassword().length() >= 6, "密码长度不能小于6位");
+        Assert.isTrue(StringUtils.hasText(userInfoEntity.getUsername()), "用户名不能为空");
+        Assert.isTrue(StringUtils.hasText(userInfoEntity.getPassword()), "密码不能为空");
+        Assert.isTrue(StringUtils.hasText(userInfoEntity.getEmail()), "邮箱不能为空");
+        Assert.isTrue(userInfoEntity.getEmail().matches("^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\\.[a-zA-Z0-9-]+)*\\.[a-zA-Z0-9]{2,6}$"), "邮箱格式错误");
+        Assert.isTrue(userInfoEntity.getPassword().length() >= 6, "密码长度不能小于6位");
         //设置时间
-        userInfo.setCreateTime(LocalDateTime.now());
-        userInfo.setUpdateTime(LocalDateTime.now());
+        userInfoEntity.setCreateTime(LocalDateTime.now());
+        userInfoEntity.setUpdateTime(LocalDateTime.now());
 
-        QueryWrapper<UserInfo> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("username",userInfo.getUsername());
-        UserInfo user = userMapper.selectOne(queryWrapper);
+        QueryWrapper<UserInfoEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("username", userInfoEntity.getUsername());
+        UserInfoEntity user = userMapper.selectOne(queryWrapper);
         Assert.isTrue(user == null, "用户名已存在");
 
-        queryWrapper.eq("email",userInfo.getEmail());
+        queryWrapper.eq("email", userInfoEntity.getEmail());
         user = userMapper.selectOne(queryWrapper);
         Assert.isTrue(user == null, "邮箱已存在");
 
         //加密
-        String encrypt = passwordEncoder.encode(userInfo.getPassword());
-        userInfo.setPassword(encrypt);
+        String encrypt = passwordEncoder.encode(userInfoEntity.getPassword());
+        userInfoEntity.setPassword(encrypt);
 
         //插入数据库
-        return userMapper.insert(userInfo);
+        return userMapper.insert(userInfoEntity);
     }
 
     //    发送邮箱验证码
@@ -99,5 +100,25 @@ public class UserServiceImpl implements UserService {
         }catch (Exception e){
             e.printStackTrace();
         }
+    }
+    //    用户中心_基础信息查询
+    @Override
+    public UserInfoDto getUserInfo(Integer userId) {
+        UserInfoEntity userInfoEntity = userMapper.selectById(userId);
+        //校验用户是否存在
+        Assert.isTrue(userInfoEntity != null, "用户不存在");
+        //将实体转换为DTO
+        UserInfoDto userInfoDto = new UserInfoDto();
+        BeanUtil.copyProperties(userInfoEntity, userInfoDto);
+        return userInfoDto;
+    }
+
+    @Override
+    public Integer getUserId(String username) {
+        QueryWrapper<UserInfoEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("username", username);
+        UserInfoEntity user = userMapper.selectOne(queryWrapper);
+        Assert.isTrue(user != null, "用户不存在");
+        return user.getId();
     }
 }
