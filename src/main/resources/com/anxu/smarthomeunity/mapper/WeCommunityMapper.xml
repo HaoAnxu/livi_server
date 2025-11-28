@@ -72,7 +72,7 @@
         <if test="lastMsgId != 0">
             AND msg_id &lt; #{lastMsgId}
         </if>
-        ORDER BY msg_id DESC
+        ORDER BY msg_id ASC
         LIMIT #{pageSize}
     </select>
     <!--    用户加入社区    -->
