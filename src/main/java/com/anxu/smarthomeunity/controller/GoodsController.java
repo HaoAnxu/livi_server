@@ -1,5 +1,6 @@
 package com.anxu.smarthomeunity.controller;
 
+import com.anxu.smarthomeunity.annotation.OperateLog;
 import com.anxu.smarthomeunity.model.vo.goods.GoodsDetailVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ public class GoodsController {
     private GoodsService goodsService;
 
     //    查询商品列表
+    @OperateLog("查询商品列表")
     @PostMapping("/goods/queryGoods")
     public Result queryGoods(@RequestBody GoodsQueryDto goodsQueryDto){
         log.info("查询商品信息，参数：{}", goodsQueryDto);
@@ -29,6 +31,7 @@ public class GoodsController {
     }
 
     //    更新商品评分和评论数量
+    @OperateLog("更新商品评分和评论数量")
     @GetMapping("/goods/resetScore")
     public Result resetScore(){
         log.info("更新商品评分和评论数量");
@@ -41,6 +44,7 @@ public class GoodsController {
     }
 
     //    查询单个商品详情
+    @OperateLog("查询单个商品详情")
     @PostMapping("/goods/queryGoodsDetail")
     public Result queryGoodsDetail(@RequestParam Long goodsId){
         log.info("查询商品详情，参数：{}",goodsId);
