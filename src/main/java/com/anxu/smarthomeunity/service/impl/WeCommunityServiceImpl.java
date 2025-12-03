@@ -17,6 +17,7 @@ import com.anxu.smarthomeunity.model.entity.wecommunity.CommunityUserEntity;
 import com.anxu.smarthomeunity.service.WeCommunityService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +30,7 @@ import java.util.List;
  * @Author: haoanxu
  * @Date: 2025/11/21 11:04
  */
+@Slf4j
 @Service
 public class WeCommunityServiceImpl implements WeCommunityService {
 
@@ -137,6 +139,8 @@ public class WeCommunityServiceImpl implements WeCommunityService {
         communityUserEntity.setCreateTime(LocalDateTime.now());
         communityUserEntity.setUpdateTime(LocalDateTime.now());
         weCommunityMapper.joinCommunity(communityUserEntity);
+        //更新社区用户数量
+        weCommunityMapper.updateCommunityUserCount(communityId);
     }
 
     /**

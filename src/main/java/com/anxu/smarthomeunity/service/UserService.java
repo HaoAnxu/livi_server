@@ -24,4 +24,8 @@ public interface UserService {
     boolean isEmailExist(String email);
     //判断用户名是否已经存在
     boolean isUsernameExist(String username);
+    //    用户中心，修改用户非敏感信息
+    Integer updateUserInfo(UserInfoEntity userInfoEntity);
+    //    用户中心，修改用户密码
+    Integer updateUserPassword(UserInfoEntity userInfoEntity);
 }

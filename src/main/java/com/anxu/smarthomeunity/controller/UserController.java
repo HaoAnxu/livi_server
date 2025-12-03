@@ -60,9 +60,8 @@ public class UserController {
         if (userService.isEmailExist(email)) {
             return Result.error("邮箱已经存在，不能重复注册");
         }
-        log.info("发送验证码请求：{}", email);
         String code = CodeUtils.generateVerifyCode();
-        log.info("生成的验证码：{}", code);
+        log.info("发送验证码请求：{}，生成的验证码：{}", email, code);
         userService.sendVerifyCode(email, code);
         // 存储验证码到Redis（有效期5分钟，用于后续校验）
         redisTemplate.opsForValue().set("verify_code:" + email, code, 5, TimeUnit.MINUTES);
@@ -72,6 +71,7 @@ public class UserController {
     //校验验证码
     @PostMapping("/user/verifyCode")
     public Result verifyCode(@RequestParam String email, @RequestParam String code) {
+        log.info("校验验证码请求：{}", email);
         String storedCode = null;
         try {
             storedCode = redisTemplate.opsForValue().get("verify_code:" + email).toString();
@@ -108,5 +108,27 @@ public class UserController {
             return Result.error("用户不存在");
         }
         return Result.success(userInfoVO);
+    }
+
+    //用户中心，修改用户非敏感信息
+    @PostMapping("/permission/user/userCenter/updateInfo")
+    public Result userCenterUpdateInfo(@RequestBody UserInfoEntity userInfoEntity){
+        log.info("用户中心，修改用户非敏感信息请求：{}", userInfoEntity);
+        Integer rows = userService.updateUserInfo(userInfoEntity);
+        if (rows == 0) {
+            return Result.error("修改用户信息失败");
+        }
+        return Result.success("修改用户信息成功");
+    }
+
+    //用户中心，修改用户密码
+    @PostMapping("/permission/user/userCenter/updatePassword")
+    public Result userCenterUpdatePassword(@RequestBody UserInfoEntity userInfoEntity){
+        log.info("用户中心，修改用户密码请求：{}", userInfoEntity);
+        Integer rows = userService.updateUserPassword(userInfoEntity);
+        if (rows == 0) {
+            return Result.error("修改用户密码失败");
+        }
+        return Result.success("修改用户密码成功");
     }
 }

@@ -40,22 +40,18 @@ public class GlobalSecurityInterceptor implements HandlerInterceptor {
 
         // 2. 时间戳校验
         String timestamp = request.getHeader("timestamp");
-        log.info("请求时间戳：{}", timestamp);
         if (!validateTimestamp(timestamp)) {
             returnError(response, 400, "请求超时（时间戳无效）");
             return false;
         }
-        log.info("时间戳校验通过");
 
         // 3. 签名校验
         String nonce = request.getHeader("nonce"); // 随机字符串（前端每次请求生成）
         String sign = request.getHeader("sign"); // 前端生成的签名
-        log.info("请求签名：{}", sign);
         if (!validateSign(timestamp, nonce, sign)) {
             returnError(response, 400, "签名无效（请求可能被篡改）");
             return false;
         }
-        log.info("签名校验通过");
 
         // 4. JWT 校验（只对 /permission/** 路径做，登录后才能访问）
         String requestUrl = request.getRequestURI();

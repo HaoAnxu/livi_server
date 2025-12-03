@@ -142,4 +142,16 @@ public class UserServiceImpl implements UserService {
         System.out.println(user);
         return user != null;
     }
+
+    //    用户中心，修改用户非敏感信息
+    @Override
+    public Integer updateUserInfo(UserInfoEntity userInfoEntity) {
+        return 0;
+    }
+
+    //    用户中心，修改用户密码
+    @Override
+    public Integer updateUserPassword(UserInfoEntity userInfoEntity) {
+        return 0;
+    }
 }
