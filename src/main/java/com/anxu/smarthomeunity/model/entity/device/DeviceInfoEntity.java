@@ -29,6 +29,8 @@ public class DeviceInfoEntity {
 
     private Integer deviceStatus;
 
+    private Integer deviceImage;
+
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;

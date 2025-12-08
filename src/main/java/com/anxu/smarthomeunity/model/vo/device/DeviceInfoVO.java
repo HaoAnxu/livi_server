@@ -22,5 +22,6 @@ public class DeviceInfoVO {
     private String deviceType;
     private String deviceName;
     private Integer deviceStatus;
+    private Integer deviceImage;
     private LocalDateTime createTime;
 }

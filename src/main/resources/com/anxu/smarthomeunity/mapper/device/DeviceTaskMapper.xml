@@ -9,7 +9,8 @@
             UPDATE device_task
             SET task_status = #{item.taskStatus},
             permit = #{item.permit},
-            update_time = NOW()
+            update_time = NOW(),
+            for_next_date = #{item.forNextDate}
             WHERE task_id = #{item.taskId}
         </foreach>
     </update>

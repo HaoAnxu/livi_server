@@ -21,7 +21,8 @@ public class DeviceTaskVO {
     private Integer userId;
     private String taskType;//once,for,long
     private Integer permit;//0-不允许，1-允许
-    private Integer task_status;//0 - 已终止 / 1 - 待执行 / 2 - 执行中 / 3 - 异常
+    private Integer taskStatus;//任务状态:0-终止,1-待执行,2-执行中,3-异常
+    private String forModel;//for类型的执行模式:day,week,month
     private LocalDateTime beginTime;
     private LocalDateTime endTime;
     private LocalDateTime createTime;

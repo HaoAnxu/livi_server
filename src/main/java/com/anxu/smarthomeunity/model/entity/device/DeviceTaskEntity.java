@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -27,9 +28,13 @@ public class DeviceTaskEntity {
 
     private Integer permit;//0-不允许，1-允许
 
-    private String cycleRule;//循环规则,仅循环周期任务使用
+    private Integer taskStatus;//任务状态:0-终止,1-待执行,2-执行中,3-异常
 
-    private Integer taskStatus;//0 - 已终止 / 1 - 待执行 / 2 - 执行中 / 3 - 异常
+    private LocalDate onceStartDate;//开始执行的日期(once类型)
+
+    private LocalDate forNextDate;//下次可以执行的日期(for类型)
+
+    private String forModel;//for类型的执行模式:day,week,month
 
     private LocalDateTime beginTime;
 

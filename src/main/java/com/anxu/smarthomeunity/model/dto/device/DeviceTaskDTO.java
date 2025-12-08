@@ -1,10 +1,11 @@
 package com.anxu.smarthomeunity.model.dto.device;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 /**
  * 设备任务DTO
@@ -18,10 +19,10 @@ import java.time.LocalDateTime;
 public class DeviceTaskDTO {
     private Integer deviceId;
     private Integer userId;
+    private Integer permit;//0-不允许，1-允许
     private String taskType;//once,for,long
-    private Integer permit;//0-不允许,1-允许
-    private String cycle_rule;//循环规则,仅循环周期任务使用
-    private Integer task_status;//0 - 已终止 / 1 - 待执行 / 2 - 执行中 / 3 - 异常
-    private LocalDateTime beginTime;
-    private LocalDateTime endTime;
+    private LocalDate onceStartDate;//开始执行的日期(once类型)
+    private String forModel;//for类型的执行模式:day,week,month
+    private LocalTime beginTime;
+    private LocalTime endTime;
 }

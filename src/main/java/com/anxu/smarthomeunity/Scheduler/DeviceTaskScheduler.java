@@ -29,7 +29,6 @@ public class DeviceTaskScheduler {
             deviceTaskService.stopDeviceTask(now);
             //子流程2：启动到时间的定时任务
             deviceTaskService.startDeviceTask(now);
-            log.info("设备任务轮询执行完成，时间：{}", now);
         } catch (Exception e) {
             log.error("设备任务轮询执行异常", e);
             // 异常不中断后续轮询（fixedRate会继续触发下一次）
