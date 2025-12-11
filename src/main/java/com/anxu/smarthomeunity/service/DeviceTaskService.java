@@ -1,8 +1,10 @@
 package com.anxu.smarthomeunity.service;
 
 import com.anxu.smarthomeunity.model.dto.device.DeviceTaskDTO;
+import com.anxu.smarthomeunity.model.vo.device.DeviceTaskVO;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 设备定时任务服务接口
@@ -17,4 +19,10 @@ public interface DeviceTaskService {
     void stopDeviceTask(LocalDateTime now);
     //启动到时间的定时任务
     void startDeviceTask(LocalDateTime now);
+    //查询设备执行任务记录
+    List<DeviceTaskVO> queryTaskRecord(Integer deviceId);
+    //手动关闭设备执行任务
+    boolean stopDeviceTask(Integer taskId);
+    //手动关闭最新的long类型设备执行任务
+    boolean stopDeviceLongTask();
 }

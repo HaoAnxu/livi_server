@@ -18,9 +18,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class DeviceInfoVO {
     private Integer deviceId;
-    private Integer familyId;//家庭id
-    private Integer userId;
-    private Integer roomId;
+    private String familyName;//家庭名称
+    private String userName;
+    private String roomName;
     private String deviceType;
     private String deviceName;
     private Integer deviceStatus;

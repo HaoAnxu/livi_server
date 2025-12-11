@@ -1,9 +1,10 @@
 package com.anxu.smarthomeunity.conf;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 /**
  * 跨域配置
  *
@@ -11,15 +12,28 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @Date: 2025/11/18 09:43
  */
 @Configuration
-public class CorsConfig implements WebMvcConfigurer {
+public class CorsConfig {
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // 匹配所有接口（包括 /api/*、/admin/* 等）
-                .allowedOrigins("http://localhost:5173","http://localhost:80") // 允许 Vue3 前端域名（必须精确，不能带 /）
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // 允许的请求方法（含预检请求 OPTIONS）
-                .allowedHeaders("*") // 允许所有请求头（如 Content-Type、Authorization 等）
-                .allowCredentials(true) // 允许携带 Cookie（如需前后端传 Cookie 必须开启）
-                .maxAge(3600); // 预检请求缓存时间（1小时，减少 OPTIONS 请求次数）
+    @Bean
+    public CorsFilter corsFilter() {
+        // 1. 创建跨域配置对象
+        CorsConfiguration config = new CorsConfiguration();
+        // 允许前端域名（5173端口）跨域
+        config.addAllowedOrigin("http://localhost:5173");
+        // 允许携带Cookie（如果需要）
+        config.setAllowCredentials(true);
+        // 允许所有请求方法（GET/POST/PUT/DELETE等）
+        config.addAllowedMethod("*");
+        // 允许所有请求头
+        config.addAllowedHeader("*");
+        // 预检请求有效期（秒），避免频繁发OPTIONS请求
+        config.setMaxAge(3600L);
+
+        // 2. 配置跨域规则生效的路径（所有接口）
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        // 3. 返回跨域过滤器
+        return new CorsFilter(source);
     }
 }

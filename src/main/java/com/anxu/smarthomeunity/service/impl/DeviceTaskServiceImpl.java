@@ -6,16 +6,19 @@ import com.anxu.smarthomeunity.mapper.device.DeviceInfoMapper;
 import com.anxu.smarthomeunity.mapper.device.DeviceTaskMapper;
 import com.anxu.smarthomeunity.model.dto.device.DeviceTaskDTO;
 import com.anxu.smarthomeunity.model.entity.device.DeviceTaskEntity;
+import com.anxu.smarthomeunity.model.vo.device.DeviceTaskVO;
 import com.anxu.smarthomeunity.service.DeviceTaskService;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -159,5 +162,74 @@ public class DeviceTaskServiceImpl implements DeviceTaskService {
                 });
         log.info("【启动任务】所有设备状态更新完成，总计更新{}个设备",
                 deviceTaskList.stream().map(DeviceTaskEntity::getDeviceId).distinct().count());
+    }
+
+    @Override
+    public List<DeviceTaskVO> queryTaskRecord(Integer deviceId) {
+        QueryWrapper<DeviceTaskEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("device_id", deviceId)
+                .orderByDesc("create_time");
+        List<DeviceTaskEntity> deviceTaskList = deviceTaskMapper.selectList(queryWrapper);
+        log.info("【查询任务记录】查询到符合条件的任务数：{}，任务列表：{}", deviceTaskList.size(), deviceTaskList);
+        // 初始化VO列表
+        List<DeviceTaskVO> deviceTaskVOList = new ArrayList<>();
+        // 遍历Entity列表，逐个转换为VO
+        for (DeviceTaskEntity entity : deviceTaskList) {
+            DeviceTaskVO vo = new DeviceTaskVO();
+            // 核心：拷贝Entity属性到VO（字段名+类型一致时自动映射）
+            BeanUtils.copyProperties(entity, vo);
+            deviceTaskVOList.add(vo);
+        }
+        return deviceTaskVOList;
+    }
+
+    @Override
+    public boolean stopDeviceTask(Integer taskId) {
+        // 检查任务是否存在
+        DeviceTaskEntity task = deviceTaskMapper.selectById(taskId);
+        if (task == null) {
+            log.warn("任务ID {} 不存在", taskId);
+            return false;
+        }
+        // 更新任务状态
+        task.setTaskStatus(0); // 终止
+        task.setPermit(0);     // 禁止执行，避免重复触发
+        task.setUpdateTime(LocalDateTime.now()); // 设置更新时间为当前时间
+        // 执行更新操作
+        int updated = deviceTaskMapper.updateById(task);
+        if (updated > 0) {
+            log.info("【停止任务】成功更新任务ID {} 状态为终止", taskId);
+            return true;
+        } else {
+            log.error("【停止任务】更新任务ID {} 状态为终止失败", taskId);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean stopDeviceLongTask() {
+        // 检查任务是否存在
+        QueryWrapper<DeviceTaskEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("task_type", "long")
+                .orderByDesc("create_time")
+                .last("limit 1");
+        DeviceTaskEntity task = deviceTaskMapper.selectOne(queryWrapper);
+        if (task == null) {
+            log.warn("最新的long类型任务不存在");
+            return false;
+        }
+        // 更新任务状态
+        task.setTaskStatus(0); // 终止
+        task.setPermit(0);     // 禁止执行，避免重复触发
+        task.setUpdateTime(LocalDateTime.now()); // 设置更新时间为当前时间
+        // 执行更新操作
+        int updated = deviceTaskMapper.updateById(task);
+        if (updated > 0) {
+            log.info("成功更新最新的long类型任务ID {} 状态为终止", task.getTaskId());
+            return true;
+        } else {
+            log.error("更新最新的long类型任务ID {} 状态为终止失败", task.getTaskId());
+            return false;
+        }
     }
 }

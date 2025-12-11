@@ -44,3 +44,9 @@ thread-pool:
   queue-capacity: 50    # 任务队列容量
   keep-alive-time: 30   # 空闲线程存活时间（秒）
   pool-prefix-name: "async-task-"  # 线程名称前缀
+#配置阿里云OSS
+aliyun:
+  oss:
+    endpoint: https://oss-cn-beijing.aliyuncs.com
+    bucketName: smarthomeunity
+    region: cn-beijing

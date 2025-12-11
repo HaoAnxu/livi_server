@@ -5,9 +5,13 @@ import com.anxu.smarthomeunity.model.dto.device.DeviceInfoDTO;
 import com.anxu.smarthomeunity.model.dto.device.DeviceTaskDTO;
 import com.anxu.smarthomeunity.service.DeviceService;
 import com.anxu.smarthomeunity.service.DeviceTaskService;
+import com.anxu.smarthomeunity.util.AliyunOSSOperator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Objects;
 
 /**
  * 家居设备相关接口
@@ -23,6 +27,8 @@ public class DeviceController {
     private DeviceService deviceService;
     @Autowired
     private DeviceTaskService deviceTaskService;
+    @Autowired
+    private AliyunOSSOperator aliyunOSSOperator;
 
     //查询用户家庭信息
     @GetMapping("/permission/device/queryMyFamilyList")
@@ -80,6 +86,22 @@ public class DeviceController {
         return Result.error("更改状态失败");
     }
 
+    //上传设备图片
+    @PostMapping("/permission/device/uploadImage")
+    public Result uploadImage(@RequestParam("file") MultipartFile imageFile) {
+        log.info("上传设备图片，参数：{}", imageFile);
+        if (imageFile == null) {
+            return Result.error("图片不能为空");
+        }
+        try {
+            String imageUrl = aliyunOSSOperator.upload(imageFile.getBytes(), Objects.requireNonNull(imageFile.getOriginalFilename()));
+            return Result.success(imageUrl);
+        } catch (Exception e) {
+            log.error("上传设备图片失败，参数：{}", imageFile, e);
+            return Result.error("上传图片失败");
+        }
+    }
+
     //添加新设备
     @PostMapping("/permission/device/addDevice")
     public Result addDevice(@RequestBody DeviceInfoDTO deviceInfoDTO) {
@@ -117,5 +139,25 @@ public class DeviceController {
             return Result.success();
         }
         return Result.error("创建任务失败");
+    }
+
+    //查询设备执行任务记录
+    @GetMapping("/permission/device/queryTaskList")
+    public Result queryTaskRecord(@RequestParam Integer deviceId) {
+        log.info("查询设备执行任务记录，参数：{}", deviceId);
+        if (deviceId == null) {
+            return Result.error("设备ID不能为空");
+        }
+        return Result.success(deviceTaskService.queryTaskRecord(deviceId));
+    }
+
+    //停止设备执行任务long类型，查找最新任务
+    @PutMapping("/permission/device/stopLongTask")
+    public Result stopTask() {
+        log.info("停止设备执行任务Long");
+        if (deviceTaskService.stopDeviceLongTask()) {
+            return Result.success();
+        }
+        return Result.error("停止任务失败");
     }
 }
