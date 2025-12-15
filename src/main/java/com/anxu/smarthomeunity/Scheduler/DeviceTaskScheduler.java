@@ -31,7 +31,6 @@ public class DeviceTaskScheduler {
             deviceTaskService.startDeviceTask(now);
         } catch (Exception e) {
             log.error("设备任务轮询执行异常", e);
-            // 异常不中断后续轮询（fixedRate会继续触发下一次）
         }
     }
 }

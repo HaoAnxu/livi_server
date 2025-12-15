@@ -18,4 +18,6 @@ public interface DeviceTaskMapper extends BaseMapper<DeviceTaskEntity> {
     void stopTaskByTaskId(List<DeviceTaskEntity> deviceTaskEntities);
     //批量启动设备任务
     void startTaskByTaskId(List<DeviceTaskEntity> deviceTaskEntities);
+    //批量更新任务状态
+    void batchUpdateTaskStatus(List<DeviceTaskEntity> updateTaskList);
 }

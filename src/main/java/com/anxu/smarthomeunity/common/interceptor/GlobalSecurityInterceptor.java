@@ -75,7 +75,7 @@ public class GlobalSecurityInterceptor implements HandlerInterceptor {
         }
 
         // 所有校验通过，放行
-        log.info("安全校验通过 - 路径: {}", requestUrl);
+//        log.info("安全校验通过 - 路径: {}", requestUrl);
         return true;
     }
     // 请求完成后，清空 ThreadLocal（避免内存泄漏）

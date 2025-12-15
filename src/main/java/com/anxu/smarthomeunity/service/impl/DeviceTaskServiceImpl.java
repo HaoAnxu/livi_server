@@ -2,6 +2,7 @@ package com.anxu.smarthomeunity.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.anxu.smarthomeunity.common.emums.Device.DeviceTaskTypeEnum;
+import com.anxu.smarthomeunity.controller.DeviceTaskServer;
 import com.anxu.smarthomeunity.mapper.device.DeviceInfoMapper;
 import com.anxu.smarthomeunity.mapper.device.DeviceTaskMapper;
 import com.anxu.smarthomeunity.model.dto.device.DeviceTaskDTO;
@@ -9,18 +10,21 @@ import com.anxu.smarthomeunity.model.entity.device.DeviceTaskEntity;
 import com.anxu.smarthomeunity.model.vo.device.DeviceTaskVO;
 import com.anxu.smarthomeunity.service.DeviceTaskService;
 
+import com.anxu.smarthomeunity.util.SpringContextUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.WebSocketSession;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -37,26 +41,66 @@ public class DeviceTaskServiceImpl implements DeviceTaskService {
     private DeviceInfoMapper deviceInfoMapper;
     @Autowired
     private DeviceTaskMapper deviceTaskMapper;
+    @Autowired
+    private DeviceTaskServer deviceTaskServer;
 
-    //创建设备执行任务-单条
+
+    //创建设备执行任务,校验时间段是否已经存在任务
     @Override
-    public boolean createTask(DeviceTaskDTO deviceTaskDTO) {
-        log.info("创建设备任务：{}", deviceTaskDTO);
-        LocalDate nowDate = LocalDate.now();
+    public String createTask(DeviceTaskDTO deviceTaskDTO) {
+        log.info("【创建设备任务】设备ID：{}，任务类型：{}", deviceTaskDTO.getDeviceId(), deviceTaskDTO.getTaskType());
+
+        // 基础校验：设备是否存在
         if (deviceInfoMapper.selectById(deviceTaskDTO.getDeviceId()) == null) {
-            log.error("创建设备任务失败，设备ID不存在：{}", deviceTaskDTO.getDeviceId());
-            return false;
+            log.error("【创建设备任务失败】设备ID不存在：{}", deviceTaskDTO.getDeviceId());
+            return "设备ID不存在";
         }
 
         DeviceTaskEntity deviceTask = BeanUtil.copyProperties(deviceTaskDTO, DeviceTaskEntity.class);
-        if (deviceTaskDTO.getTaskType().equals("once")) {
+        LocalDate nowDate = LocalDate.now();
+        String taskType = deviceTaskDTO.getTaskType();
+
+        if (checkDeviceTimeOverlap(deviceTaskDTO, nowDate)) {
+            log.error("【创建设备任务失败】设备ID {} 在 {} {} - {} 时间段已存在有效任务（once/for）",
+                    deviceTaskDTO.getDeviceId(), nowDate, deviceTaskDTO.getBeginTime(), deviceTaskDTO.getEndTime());
+            return "该设备在所选时间段内已存在执行中的任务（单次/循环），禁止重复创建";
+        }
+
+        // 初始化任务日期字段
+        if ("once".equals(taskType)) {
             deviceTask.setOnceStartDate(nowDate);
-        } else if (deviceTaskDTO.getTaskType().equals("for")) {
+        } else if ("for".equals(taskType)) {
             deviceTask.setForNextDate(nowDate);
         }
+
+        // 插入任务
         boolean result = deviceTaskMapper.insert(deviceTask) > 0;
-        log.info("创建设备任务结束，任务ID：{}，结果：{}", deviceTask.getTaskId(), result);
-        return result;
+        log.info("【创建设备任务完成】任务ID：{}，结果：{}", deviceTask.getTaskId(), result);
+        // 推送更新后的任务列表到设备
+        if (result) {
+            SpringContextUtil.getBean(DeviceTaskServer.class).pushTaskListByDeviceId(deviceTaskDTO.getDeviceId());
+        }
+        return result ? "success" : "创建任务失败";
+    }
+
+    //校验同一设备+当天+时间段重叠+permit=1（有效任务）
+    private boolean checkDeviceTimeOverlap(DeviceTaskDTO dto, LocalDate nowDate) {
+        QueryWrapper<DeviceTaskEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("device_id", dto.getDeviceId())
+                .eq("permit", 1) // 仅校验有效任务（permit=1）
+                .in("task_type", "once", "for") // 同时校验once/for两类任务
+                // 时间范围：once取once_start_date，for取for_next_date，都等于当天
+                .and(wrapper -> wrapper
+                        .eq("task_type", "once").eq("once_start_date", nowDate)
+                        .or()
+                        .eq("task_type", "for").eq("for_next_date", nowDate)
+                )
+                // 核心：时间段重叠判断（新任务begin < 已有end 且 新任务end > 已有begin）
+                .lt("begin_time", dto.getEndTime())
+                .gt("end_time", dto.getBeginTime());
+
+        // 只需判断数量>0，无需查整条数据，性能更高
+        return deviceTaskMapper.selectCount(queryWrapper) > 0;
     }
 
     //停止到时间的定时任务
@@ -68,9 +112,9 @@ public class DeviceTaskServiceImpl implements DeviceTaskService {
         queryWrapper.in("task_type", "once", "for")
                 .eq("task_status", 2)
                 .eq("permit", 1)
-                .lt("end_time", now);//lt的意思是小于等于now
+                .lt("end_time", now);
         List<DeviceTaskEntity> deviceTaskList = deviceTaskMapper.selectList(queryWrapper);
-        log.info("【停止任务】查询到符合条件的任务数：{}，任务列表：{}", deviceTaskList.size(), deviceTaskList);
+//        log.info("【自动停止任务】符合条件任务数：{}", deviceTaskList.size());
 
         if (deviceTaskList.isEmpty()) {
             return;
@@ -79,6 +123,7 @@ public class DeviceTaskServiceImpl implements DeviceTaskService {
         for (DeviceTaskEntity currentItem : deviceTaskList) {
             // 先更新设备状态为0（关闭）
             deviceInfoMapper.updateByDeviceId(currentItem.getDeviceId(), 0);
+            pushDeviceStatusToFrontend(currentItem.getDeviceId());
             // 再更新任务状态（for重置为1，once终止为0）
             switch (currentItem.getTaskType()) {
                 case "for":
@@ -104,7 +149,12 @@ public class DeviceTaskServiceImpl implements DeviceTaskService {
         }
         // 批量更新
         deviceTaskMapper.stopTaskByTaskId(deviceTaskList);
-        log.info("【停止任务】批量更新{}条任务状态完成", deviceTaskList.size());
+        log.info("【自动停止任务完成】更新{}条任务状态", deviceTaskList.size());
+        // 推送更新后的任务列表到设备
+        if (!deviceTaskList.isEmpty()) {
+            Integer deviceId = deviceTaskList.get(0).getDeviceId();
+            SpringContextUtil.getBean(DeviceTaskServer.class).pushTaskListByDeviceId(deviceId);
+        }
     }
 
     //启动到时间的定时任务
@@ -140,96 +190,193 @@ public class DeviceTaskServiceImpl implements DeviceTaskService {
                 )
         );
         List<DeviceTaskEntity> deviceTaskList = deviceTaskMapper.selectList(queryWrapper);
-        log.info("【启动任务】查询到符合条件的任务数：{}，任务列表：{}", deviceTaskList.size(), deviceTaskList);
+//        log.info("【自动启动任务】符合条件任务数：{}", deviceTaskList.size());
 
         if (deviceTaskList.isEmpty()) {
             return;
         }
 
-        // 批量更新任务状态（保持原有逻辑）
+        Set<Integer> nonLongDeviceIds = deviceTaskList.stream()
+                .filter(task -> "once".equals(task.getTaskType()) || "for".equals(task.getTaskType()))
+                .map(DeviceTaskEntity::getDeviceId)
+                .collect(Collectors.toSet());
+        // 遍历once/for任务的设备ID，终止Long任务
+        for (Integer deviceId : nonLongDeviceIds) {
+            stopAllLongTask(deviceId);
+            log.info("【自动启动任务-前置操作】设备ID：{} 已终止所有执行中的Long任务", deviceId);
+        }
+
+        // 2. long任务的设备ID不执行终止操作，直接更新状态
+        Set<Integer> longDeviceIds = deviceTaskList.stream()
+                .filter(task -> "long".equals(task.getTaskType()))
+                .map(DeviceTaskEntity::getDeviceId)
+                .collect(Collectors.toSet());
+
+        // 批量更新所有待启动任务的状态为执行中
         for (DeviceTaskEntity task : deviceTaskList) {
             task.setTaskStatus(2);//设置为执行中
             task.setUpdateTime(now);//设置更新时间为当前时间
         }
         deviceTaskMapper.startTaskByTaskId(deviceTaskList);
-
-        //更新设备状态
-        deviceTaskList.stream()
+        // 更新设备状态为执行中（包含所有任务类型的设备）
+        Set<Integer> allDeviceIds = deviceTaskList.stream()
                 .map(DeviceTaskEntity::getDeviceId)
-                .distinct()
-                .forEach(deviceId -> {
-                    deviceInfoMapper.updateByDeviceId(deviceId, 1); // 设备状态置为执行中
-                });
-        log.info("【启动任务】所有设备状态更新完成，总计更新{}个设备",
-                deviceTaskList.stream().map(DeviceTaskEntity::getDeviceId).distinct().count());
+                .collect(Collectors.toSet());
+        allDeviceIds.forEach(deviceId -> {
+            deviceInfoMapper.updateByDeviceId(deviceId, 1);
+            // ========== 关键新增：推送设备状态到前端 ==========
+            pushDeviceStatusToFrontend(deviceId);
+        });
+        log.info("【自动启动任务完成】更新{}个设备状态为执行中", allDeviceIds.size());
+
+        // 推送更新后的任务列表到设备
+        if (!deviceTaskList.isEmpty()) {
+            // 获取设备ID（取第一个即可，因为是按设备ID去重的）
+            Integer deviceId = deviceTaskList.get(0).getDeviceId();
+            // 调用WS的推任务列表方法（需要把DeviceTaskServer注入进来）
+            SpringContextUtil.getBean(DeviceTaskServer.class).pushTaskListByDeviceId(deviceId);
+        }
     }
 
+    // 终止所有Long类型任务
+    private void stopAllLongTask(Integer deviceId) {
+        QueryWrapper<DeviceTaskEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("device_id", deviceId)
+                .eq("task_type", "long")
+                .eq("task_status", 2); // 仅查询执行中的任务
+        List<DeviceTaskEntity> taskList = deviceTaskMapper.selectList(queryWrapper);
+        if (taskList.isEmpty()) {
+            log.warn("【终止所有Long类型任务】设备ID：{}，无执行中任务", deviceId);
+            return;
+        }
+        log.info("【终止所有Long类型任务】设备ID：{}，待处理任务数：{}", deviceId, taskList.size());
+
+        // 定义要批量更新的任务列表（避免循环里逐个更新）
+        List<DeviceTaskEntity> updateTaskList = new ArrayList<>();
+        for (DeviceTaskEntity task : taskList) {
+            if (task.getTaskStatus() == 2) { // 仅处理执行中的任务
+                task.setTaskStatus(0);
+                task.setPermit(0);
+                // 统一设置更新时间
+                task.setUpdateTime(LocalDateTime.now());
+                // 加入批量更新列表
+                updateTaskList.add(task);
+            }
+        }
+
+        // 批量更新任务状态
+        if (!updateTaskList.isEmpty()) {
+            deviceTaskMapper.batchUpdateTaskStatus(updateTaskList);
+            log.info("【终止所有Long类型任务】设备ID：{}，更新{}条任务状态", deviceId, updateTaskList.size());
+        }
+        deviceInfoMapper.updateByDeviceId(deviceId, 0);
+        log.info("【终止所有Long类型任务】设备ID：{}，状态已更新为关闭", deviceId);
+    }
+
+    // 查询设备执行任务记录
     @Override
     public List<DeviceTaskVO> queryTaskRecord(Integer deviceId) {
         QueryWrapper<DeviceTaskEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("device_id", deviceId)
                 .orderByDesc("create_time");
         List<DeviceTaskEntity> deviceTaskList = deviceTaskMapper.selectList(queryWrapper);
-        log.info("【查询任务记录】查询到符合条件的任务数：{}，任务列表：{}", deviceTaskList.size(), deviceTaskList);
+        log.info("【查询任务记录】设备ID：{}，任务数：{}", deviceId, deviceTaskList.size());
+
         // 初始化VO列表
         List<DeviceTaskVO> deviceTaskVOList = new ArrayList<>();
         // 遍历Entity列表，逐个转换为VO
         for (DeviceTaskEntity entity : deviceTaskList) {
             DeviceTaskVO vo = new DeviceTaskVO();
-            // 核心：拷贝Entity属性到VO（字段名+类型一致时自动映射）
+            //拷贝Entity属性到VO（字段名+类型一致时自动映射）
             BeanUtils.copyProperties(entity, vo);
             deviceTaskVOList.add(vo);
         }
         return deviceTaskVOList;
     }
 
+    // 手动停止设备执行中的任务
     @Override
-    public boolean stopDeviceTask(Integer taskId) {
-        // 检查任务是否存在
-        DeviceTaskEntity task = deviceTaskMapper.selectById(taskId);
-        if (task == null) {
-            log.warn("任务ID {} 不存在", taskId);
+    public boolean stopDeviceRunningTask(Integer deviceId) {
+        // 检查设备是否有执行中的任务
+        QueryWrapper<DeviceTaskEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("device_id", deviceId)
+                .eq("task_status", 2); // 仅查询执行中的任务
+        List<DeviceTaskEntity> taskList = deviceTaskMapper.selectList(queryWrapper);
+
+        if (taskList.isEmpty()) {
+            log.warn("【手动停止任务】设备ID：{}，无执行中任务", deviceId);
             return false;
         }
-        // 更新任务状态
-        task.setTaskStatus(0); // 终止
-        task.setPermit(0);     // 禁止执行，避免重复触发
-        task.setUpdateTime(LocalDateTime.now()); // 设置更新时间为当前时间
-        // 执行更新操作
-        int updated = deviceTaskMapper.updateById(task);
-        if (updated > 0) {
-            log.info("【停止任务】成功更新任务ID {} 状态为终止", taskId);
-            return true;
-        } else {
-            log.error("【停止任务】更新任务ID {} 状态为终止失败", taskId);
-            return false;
+        log.info("【手动停止任务】设备ID：{}，待处理任务数：{}", deviceId, taskList.size());
+
+        // 定义要批量更新的任务列表（避免循环里逐个更新）
+        List<DeviceTaskEntity> updateTaskList = new ArrayList<>();
+        for (DeviceTaskEntity task : taskList) {
+            if (task.getTaskStatus() == 2) { // 仅处理执行中的任务
+                switch (task.getTaskType()) {
+                    // long类型：终止+禁止执行
+                    case "long":
+                        task.setTaskStatus(0);
+                        task.setPermit(0);
+                        break;
+                    // for类型：重置为待执行，更新下次执行时间
+                    case "for":
+                        task.setTaskStatus(1);
+                        task.setPermit(1);
+                        switch (task.getForModel()) {
+                            case "day":
+                                task.setForNextDate(task.getForNextDate().plusDays(1));
+                                break;
+                            case "week":
+                                task.setForNextDate(task.getForNextDate().plusWeeks(1));
+                                break;
+                            case "month":
+                                task.setForNextDate(task.getForNextDate().plusMonths(1));
+                                break;
+                        }
+                        break;
+                    // once类型：仅终止+禁止执行，不置空onceStartDate（保留记录）
+                    case "once":
+                        task.setTaskStatus(0);
+                        task.setPermit(0);
+                        break;
+                }
+                // 统一设置更新时间
+                task.setUpdateTime(LocalDateTime.now());
+                // 加入批量更新列表
+                updateTaskList.add(task);
+            }
         }
+
+        // 批量更新任务状态
+        if (!updateTaskList.isEmpty()) {
+            deviceTaskMapper.batchUpdateTaskStatus(updateTaskList);
+            log.info("【手动停止任务】设备ID：{}，更新{}条任务状态", deviceId, updateTaskList.size());
+        }
+
+        // 同步更新设备状态为「关闭」（0）
+        deviceInfoMapper.updateByDeviceId(deviceId, 0);
+        log.info("【手动停止任务完成】设备ID：{}，状态已更新为关闭", deviceId);
+        // 推送更新后的任务列表到设备
+        if (!updateTaskList.isEmpty()) {
+            SpringContextUtil.getBean(DeviceTaskServer.class).pushTaskListByDeviceId(deviceId);
+        }
+        return true;
     }
 
-    @Override
-    public boolean stopDeviceLongTask() {
-        // 检查任务是否存在
-        QueryWrapper<DeviceTaskEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("task_type", "long")
-                .orderByDesc("create_time")
-                .last("limit 1");
-        DeviceTaskEntity task = deviceTaskMapper.selectOne(queryWrapper);
-        if (task == null) {
-            log.warn("最新的long类型任务不存在");
-            return false;
-        }
-        // 更新任务状态
-        task.setTaskStatus(0); // 终止
-        task.setPermit(0);     // 禁止执行，避免重复触发
-        task.setUpdateTime(LocalDateTime.now()); // 设置更新时间为当前时间
-        // 执行更新操作
-        int updated = deviceTaskMapper.updateById(task);
-        if (updated > 0) {
-            log.info("成功更新最新的long类型任务ID {} 状态为终止", task.getTaskId());
-            return true;
-        } else {
-            log.error("更新最新的long类型任务ID {} 状态为终止失败", task.getTaskId());
-            return false;
+    // 推送设备状态到前端
+    private void pushDeviceStatusToFrontend(Integer deviceId) {
+        try {
+            DeviceTaskServer deviceTaskServer = SpringContextUtil.getBean(DeviceTaskServer.class);
+            // 获取该设备的WebSocket会话
+            WebSocketSession session = DeviceTaskServer.device_instance_map.get(deviceId);
+            if (session != null && session.isOpen()) {
+                deviceTaskServer.pushDeviceStatus(session, deviceId);
+            } else {
+                log.warn("【推送设备状态失败】设备ID：{} 无有效WebSocket连接", deviceId);
+            }
+        } catch (Exception e) {
+            log.error("【推送设备状态异常】设备ID：{}", deviceId, e);
         }
     }
 }

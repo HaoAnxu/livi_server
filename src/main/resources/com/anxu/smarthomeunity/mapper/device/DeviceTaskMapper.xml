@@ -24,4 +24,14 @@
             WHERE task_id = #{item.taskId}
         </foreach>
     </update>
+    <update id="batchUpdateTaskStatus">
+        <foreach collection="list" item="task" separator=";">
+            UPDATE device_task
+            SET task_status = #{task.taskStatus},
+            permit = #{task.permit},
+            for_next_date = #{task.forNextDate},
+            update_time = #{task.updateTime}
+            WHERE task_id = #{task.taskId}
+        </foreach>
+    </update>
 </mapper>
