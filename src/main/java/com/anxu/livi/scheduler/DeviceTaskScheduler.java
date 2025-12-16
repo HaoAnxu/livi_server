@@ -1,4 +1,4 @@
-package com.anxu.livi.Scheduler;
+package com.anxu.livi.scheduler;
 
 import com.anxu.livi.service.DeviceTaskService;
 import lombok.extern.slf4j.Slf4j;
