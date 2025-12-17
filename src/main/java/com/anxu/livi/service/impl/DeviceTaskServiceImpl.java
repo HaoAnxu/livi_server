@@ -67,7 +67,7 @@ public class DeviceTaskServiceImpl implements DeviceTaskService {
             }
             deviceTask.setForNextDate(nowDate); // for任务固定当天开始
         } else if ("once".equals(taskType)) {
-            // once任务执行日期：默认当天，也可扩展支持指定日期
+            // once任务执行日期：默认当天
             LocalDate onceExecDate = deviceTaskDTO.getOnceStartDate() != null ? deviceTaskDTO.getOnceStartDate() : nowDate;
             deviceTask.setOnceStartDate(onceExecDate);
 
@@ -89,9 +89,7 @@ public class DeviceTaskServiceImpl implements DeviceTaskService {
         return result ? "success" : "创建任务失败";
     }
 
-    /**
-     * 校验：同设备是否有有效for任务与新任务时间段重叠（for任务永久占用时间段）
-     */
+    //校验：同设备是否有有效for任务与新任务时间段重叠（for任务永久占用时间段）
     private boolean checkForTaskTimeOverlap(DeviceTaskDTO dto) {
         QueryWrapper<DeviceTaskEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("device_id", dto.getDeviceId())
@@ -103,10 +101,7 @@ public class DeviceTaskServiceImpl implements DeviceTaskService {
 
         return deviceTaskMapper.selectCount(queryWrapper) > 0;
     }
-
-    /**
-     * 校验：同设备+指定日期是否有有效once任务与新任务时间段重叠
-     */
+    //校验：同设备+指定日期是否有有效once任务与新任务时间段重叠
     private boolean checkOnceTaskTimeOverlap(DeviceTaskDTO dto, LocalDate onceExecDate) {
         QueryWrapper<DeviceTaskEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("device_id", dto.getDeviceId())
