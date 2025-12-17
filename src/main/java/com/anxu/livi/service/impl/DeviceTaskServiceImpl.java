@@ -58,17 +58,25 @@ public class DeviceTaskServiceImpl implements DeviceTaskService {
         LocalDate nowDate = LocalDate.now();
         String taskType = deviceTaskDTO.getTaskType();
 
-        if (checkDeviceTimeOverlap(deviceTaskDTO, nowDate)) {
-            log.error("【创建设备任务失败】设备ID {} 在 {} {} - {} 时间段已存在有效任务（once/for）",
-                    deviceTaskDTO.getDeviceId(), nowDate, deviceTaskDTO.getBeginTime(), deviceTaskDTO.getEndTime());
-            return "该设备在所选时间段内已存在执行中的任务（单次/循环），禁止重复创建";
-        }
+        if ("for".equals(taskType)) {
+            // for任务校验：同设备+时间段重叠的有效for任务 → 冲突
+            if (checkForTaskTimeOverlap(deviceTaskDTO)) {
+                log.error("【创建设备任务失败】设备ID {} 的 {} - {} 时间段已被循环任务占用（天/周/月），禁止创建",
+                        deviceTaskDTO.getDeviceId(), deviceTaskDTO.getBeginTime(), deviceTaskDTO.getEndTime());
+                return "该设备的该时间段已被循环任务占用，禁止创建";
+            }
+            deviceTask.setForNextDate(nowDate); // for任务固定当天开始
+        } else if ("once".equals(taskType)) {
+            // once任务执行日期：默认当天，也可扩展支持指定日期
+            LocalDate onceExecDate = deviceTaskDTO.getOnceStartDate() != null ? deviceTaskDTO.getOnceStartDate() : nowDate;
+            deviceTask.setOnceStartDate(onceExecDate);
 
-        // 初始化任务日期字段
-        if ("once".equals(taskType)) {
-            deviceTask.setOnceStartDate(nowDate);
-        } else if ("for".equals(taskType)) {
-            deviceTask.setForNextDate(nowDate);
+            // once任务校验：1. 时间段被for任务占用 → 冲突；2. 当天同时间段有once任务 → 冲突
+            if (checkForTaskTimeOverlap(deviceTaskDTO) || checkOnceTaskTimeOverlap(deviceTaskDTO, onceExecDate)) {
+                log.error("【创建设备任务失败】设备ID {} 在 {} {} - {} 时间段已被占用（循环/单次任务）",
+                        deviceTaskDTO.getDeviceId(), onceExecDate, deviceTaskDTO.getBeginTime(), deviceTaskDTO.getEndTime());
+                return "该设备在所选时间段内已存在执行中的任务（单次/循环），禁止重复创建";
+            }
         }
 
         // 插入任务
@@ -81,23 +89,34 @@ public class DeviceTaskServiceImpl implements DeviceTaskService {
         return result ? "success" : "创建任务失败";
     }
 
-    //校验同一设备+当天+时间段重叠+permit=1（有效任务）
-    private boolean checkDeviceTimeOverlap(DeviceTaskDTO dto, LocalDate nowDate) {
+    /**
+     * 校验：同设备是否有有效for任务与新任务时间段重叠（for任务永久占用时间段）
+     */
+    private boolean checkForTaskTimeOverlap(DeviceTaskDTO dto) {
         QueryWrapper<DeviceTaskEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("device_id", dto.getDeviceId())
-                .eq("permit", 1) // 仅校验有效任务（permit=1）
-                .in("task_type", "once", "for") // 同时校验once/for两类任务
-                // 时间范围：once取once_start_date，for取for_next_date，都等于当天
-                .and(wrapper -> wrapper
-                        .eq("task_type", "once").eq("once_start_date", nowDate)
-                        .or()
-                        .eq("task_type", "for").eq("for_next_date", nowDate)
-                )
-                // 核心：时间段重叠判断（新任务begin < 已有end 且 新任务end > 已有begin）
+                .eq("permit", 1) // 仅校验有效任务
+                .eq("task_type", "for") // 只查for任务
+                // 时间段重叠：新任务begin < 已有end 且 新任务end > 已有begin
                 .lt("begin_time", dto.getEndTime())
                 .gt("end_time", dto.getBeginTime());
 
-        // 只需判断数量>0，无需查整条数据，性能更高
+        return deviceTaskMapper.selectCount(queryWrapper) > 0;
+    }
+
+    /**
+     * 校验：同设备+指定日期是否有有效once任务与新任务时间段重叠
+     */
+    private boolean checkOnceTaskTimeOverlap(DeviceTaskDTO dto, LocalDate onceExecDate) {
+        QueryWrapper<DeviceTaskEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("device_id", dto.getDeviceId())
+                .eq("permit", 1) // 仅校验有效任务
+                .eq("task_type", "once") // 只查once任务
+                .eq("once_start_date", onceExecDate) // 仅校验指定执行日期
+                // 时间段重叠
+                .lt("begin_time", dto.getEndTime())
+                .gt("end_time", dto.getBeginTime());
+
         return deviceTaskMapper.selectCount(queryWrapper) > 0;
     }
 
@@ -359,6 +378,43 @@ public class DeviceTaskServiceImpl implements DeviceTaskService {
         if (!updateTaskList.isEmpty()) {
             SpringContextUtil.getBean(DeviceTaskServer.class).pushTaskListByDeviceId(deviceId);
         }
+        return true;
+    }
+
+    //根据任务类型查询设备执行任务记录
+    @Override
+    public List<DeviceTaskVO> queryTaskByTaskType(Integer deviceId, String taskType) {
+        QueryWrapper<DeviceTaskEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("device_id", deviceId)
+                .eq("task_type", taskType)
+                .orderByDesc("create_time");
+        List<DeviceTaskEntity> deviceTaskList = deviceTaskMapper.selectList(queryWrapper);
+        log.info("【查询任务记录】设备ID：{}，任务类型：{}，任务数：{}", deviceId, taskType, deviceTaskList.size());
+
+        // 初始化VO列表
+        List<DeviceTaskVO> deviceTaskVOList = new ArrayList<>();
+        // 遍历Entity列表，逐个转换为VO
+        for (DeviceTaskEntity entity : deviceTaskList) {
+            DeviceTaskVO vo = new DeviceTaskVO();
+            //拷贝Entity属性到VO（字段名+类型一致时自动映射）
+            BeanUtils.copyProperties(entity, vo);
+            deviceTaskVOList.add(vo);
+        }
+        return deviceTaskVOList;
+    }
+
+    //根据任务ID删除设备执行任务记录
+    @Override
+    public boolean deleteTask(Integer taskId) {
+        // 检查任务是否存在
+        DeviceTaskEntity task = deviceTaskMapper.selectById(taskId);
+        if (task == null) {
+            log.warn("【删除任务根据taskId】任务ID：{} 不存在", taskId);
+            return false;
+        }
+        // 删除任务
+        deviceTaskMapper.deleteById(taskId);
+        log.info("【删除任务根据taskId】成功删除任务ID：{}", taskId);
         return true;
     }
 

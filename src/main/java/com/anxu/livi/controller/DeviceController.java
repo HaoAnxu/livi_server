@@ -143,13 +143,16 @@ public class DeviceController {
     }
 
     //查询设备执行任务记录
-    @GetMapping("/permission/device/queryTaskList")
-    public Result queryTaskRecord(@RequestParam Integer deviceId) {
-        log.info("<查询设备执行任务记录>，参数(deviceId)：{}", deviceId);
+    @GetMapping("/permission/device/queryTaskListByTaskType")
+    public Result queryTaskRecord(@RequestParam Integer deviceId,String taskType) {
+        log.info("<查询设备执行任务记录>，参数(deviceId)：{}，参数(taskType)：{}", deviceId, taskType);
         if (deviceId == null) {
             return Result.error("设备ID不能为空");
         }
-        return Result.success(deviceTaskService.queryTaskRecord(deviceId));
+        if (taskType == null) {
+            return Result.error("任务类型不能为空");
+        }
+        return Result.success(deviceTaskService.queryTaskByTaskType(deviceId,taskType));
     }
 
     //手动停止所有类型的正在执行的任务
@@ -163,5 +166,18 @@ public class DeviceController {
             return Result.success();
         }
         return Result.error("停止任务失败");
+    }
+
+    //删除任务根据taskId
+    @DeleteMapping("/permission/device/deleteTaskByTaskId")
+    public Result deleteTask(@RequestParam Integer taskId) {
+        log.info("<删除任务根据taskId>，参数(taskId)：{}", taskId);
+        if (taskId == null) {
+            return Result.error("任务ID不能为空");
+        }
+        if (deviceTaskService.deleteTask(taskId)) {
+            return Result.success();
+        }
+        return Result.error("删除任务失败");
     }
 }
