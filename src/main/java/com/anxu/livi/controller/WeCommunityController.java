@@ -1,8 +1,8 @@
 package com.anxu.livi.controller;
 
-import com.anxu.livi.model.Result.Result;
+import com.anxu.livi.model.result.Result;
 import com.anxu.livi.model.vo.user.UserInfoVO;
-import com.anxu.livi.model.vo.wecommunity.CommunityInfoVO;
+import com.anxu.livi.model.vo.weCommunity.CommunityInfoVO;
 import com.anxu.livi.service.WeCommunityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * WeCommunity-相关接口
+ * 【WeCommunity-相关接口】
  *
  * @Author: haoanxu
  * @Date: 2025/11/21 13:27

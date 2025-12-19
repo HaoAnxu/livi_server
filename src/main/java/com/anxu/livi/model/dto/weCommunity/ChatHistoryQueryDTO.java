@@ -1,4 +1,4 @@
-package com.anxu.livi.model.dto.wecommunity;
+package com.anxu.livi.model.dto.weCommunity;
 import lombok.Data;
 /**
  * 聊天历史记录查询DTO

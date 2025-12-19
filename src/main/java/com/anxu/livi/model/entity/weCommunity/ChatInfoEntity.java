@@ -1,4 +1,4 @@
-package com.anxu.livi.model.entity.wecommunity;
+package com.anxu.livi.model.entity.weCommunity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;

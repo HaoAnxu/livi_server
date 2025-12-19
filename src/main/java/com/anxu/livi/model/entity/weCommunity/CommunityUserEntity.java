@@ -1,4 +1,4 @@
-package com.anxu.livi.model.entity.wecommunity;
+package com.anxu.livi.model.entity.weCommunity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -8,26 +8,18 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 信息关联表Entity
- * 将用户id，圈子id，消息id，阅读状态关联
+ * 用户-社区关联Entity
+ *
  * @Author: haoanxu
- * @Date: 2025/11/21 13:50
+ * @Date: 2025/11/26 14:24
  */
 @Data
-@TableName("pub_user_community_info_connect")
-public class ChatInfoRelaEntity {
+@TableName("pub_community_user")
+public class CommunityUserEntity {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
-
-    private Integer userId;
-
-    private Integer msgId;
-
     private Integer communityId;
-
-    private Integer readStatus;
-
+    private Integer userId;
     private LocalDateTime createTime;
-
     private LocalDateTime updateTime;
 }

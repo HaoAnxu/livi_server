@@ -2,7 +2,7 @@ package com.anxu.livi.controller;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.anxu.livi.model.Result.WebSocketResult;
+import com.anxu.livi.model.result.WebSocketResult;
 import com.anxu.livi.model.dto.device.DeviceTaskDTO;
 import com.anxu.livi.model.vo.device.DeviceInfoVO;
 import com.anxu.livi.model.vo.device.DeviceTaskVO;
@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * DeviceControl—WebSocket接口
+ * 【DeviceControl—WebSocket接口】
  *
  * @Author: haoanxu
  * @Date: 2025/12/15 13:23

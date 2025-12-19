@@ -1,4 +1,4 @@
-package com.anxu.livi.model.Result;
+package com.anxu.livi.model.result;
 
 import lombok.Data;
 

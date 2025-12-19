@@ -1,12 +1,12 @@
 package com.anxu.livi.service;
 
-import com.anxu.livi.model.dto.wecommunity.ChatHistoryQueryDTO;
-import com.anxu.livi.model.dto.wecommunity.ChatInfoDetailDTO;
+import com.anxu.livi.model.dto.weCommunity.ChatHistoryQueryDTO;
+import com.anxu.livi.model.dto.weCommunity.ChatInfoDetailDTO;
 import com.anxu.livi.model.vo.user.UserInfoVO;
-import com.anxu.livi.model.vo.wecommunity.ChatHistoryVO;
-import com.anxu.livi.model.vo.wecommunity.CommunityInfoVO;
-import com.anxu.livi.model.entity.wecommunity.ChatInfoEntity;
-import com.anxu.livi.model.entity.wecommunity.ChatInfoRelaEntity;
+import com.anxu.livi.model.vo.weCommunity.ChatHistoryVO;
+import com.anxu.livi.model.vo.weCommunity.CommunityInfoVO;
+import com.anxu.livi.model.entity.weCommunity.ChatInfoEntity;
+import com.anxu.livi.model.entity.weCommunity.ChatInfoRelaEntity;
 
 import java.util.List;
 

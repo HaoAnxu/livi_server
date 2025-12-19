@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.anxu.livi.mapper.weCommunity.WeCommunityMapper">
     <!--    插入用户-消息关联信息    -->
-    <insert id="insert" parameterType="com.anxu.livi.model.entity.wecommunity.ChatInfoRelaEntity">
+    <insert id="insert" parameterType="com.anxu.livi.model.entity.weCommunity.ChatInfoRelaEntity">
         insert into pub_user_community_info_connect (community_id, user_id, msg_id, read_status)
         values (#{communityId}, #{userId}, #{msgId}, #{readStatus})
     </insert>
@@ -27,7 +27,7 @@
         WHERE community_id = #{communityId}
     </select>
     <!--    查询用户-消息关联信息-未读消息    -->
-     <select id="queryNoReadInfo" resultType="com.anxu.livi.model.dto.wecommunity.ChatInfoDetailDTO">
+     <select id="queryNoReadInfo" resultType="com.anxu.livi.model.dto.weCommunity.ChatInfoDetailDTO">
         SELECT c.msg_id,
                c.community_id,
                c.from_user_id,
@@ -46,26 +46,26 @@
     </select>
     <!--    查询圈子信息列表    -->
     <select id="getAllCommunityList"
-            resultType="com.anxu.livi.model.entity.wecommunity.CommunityInfoEntity">
+            resultType="com.anxu.livi.model.entity.weCommunity.CommunityInfoEntity">
         SELECT *
         FROM pub_community
     </select>
     <select id="selectByCommunityIdAndUserId"
-            resultType="com.anxu.livi.model.entity.wecommunity.CommunityUserEntity">
+            resultType="com.anxu.livi.model.entity.weCommunity.CommunityUserEntity">
         SELECT *
         FROM pub_community_user
         WHERE community_id = #{communityId}
           AND user_id = #{userId}
     </select>
     <select id="queryCommunityDetail"
-            resultType="com.anxu.livi.model.entity.wecommunity.CommunityInfoEntity">
+            resultType="com.anxu.livi.model.entity.weCommunity.CommunityInfoEntity">
         SELECT *
         FROM pub_community
         WHERE community_id = #{communityId}
     </select>
     <!-- 查询聊天记录-分页 -->
     <select id="selectChatHistoryByPage"
-            resultType="com.anxu.livi.model.dto.wecommunity.ChatInfoDetailDTO">
+            resultType="com.anxu.livi.model.dto.weCommunity.ChatInfoDetailDTO">
         SELECT *
         FROM pub_community_info
         WHERE community_id = #{communityId}
@@ -76,7 +76,7 @@
         LIMIT #{pageSize}
     </select>
     <!--    用户加入社区    -->
-    <insert id="joinCommunity" parameterType="com.anxu.livi.model.entity.wecommunity.CommunityUserEntity">
+    <insert id="joinCommunity" parameterType="com.anxu.livi.model.entity.weCommunity.CommunityUserEntity">
         insert into pub_community_user (community_id, user_id, create_time, update_time)
         values (#{communityId}, #{userId}, #{createTime}, #{updateTime})
     </insert>

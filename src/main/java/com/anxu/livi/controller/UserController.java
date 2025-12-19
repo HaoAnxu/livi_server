@@ -1,7 +1,7 @@
 package com.anxu.livi.controller;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.anxu.livi.model.Result.Result;
+import com.anxu.livi.model.result.Result;
 import com.anxu.livi.model.vo.user.UserInfoVO;
 import com.anxu.livi.model.entity.user.UserInfoEntity;
 import com.anxu.livi.service.UserService;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.TimeUnit;
 /**
- * 用户信息相关接口
+ * 【用户信息相关接口】
  *
  * @Author: haoanxu
  * @Date: 2025/11/10 16:48

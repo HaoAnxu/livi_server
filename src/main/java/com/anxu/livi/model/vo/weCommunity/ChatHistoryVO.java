@@ -1,6 +1,6 @@
-package com.anxu.livi.model.vo.wecommunity;
+package com.anxu.livi.model.vo.weCommunity;
 
-import com.anxu.livi.model.dto.wecommunity.ChatInfoDetailDTO;
+import com.anxu.livi.model.dto.weCommunity.ChatInfoDetailDTO;
 import lombok.Data;
 
 import java.util.List;

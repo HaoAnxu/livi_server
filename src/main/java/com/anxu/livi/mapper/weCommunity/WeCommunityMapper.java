@@ -1,9 +1,9 @@
 package com.anxu.livi.mapper.weCommunity;
 
-import com.anxu.livi.model.dto.wecommunity.ChatInfoDetailDTO;
-import com.anxu.livi.model.entity.wecommunity.ChatInfoRelaEntity;
-import com.anxu.livi.model.entity.wecommunity.CommunityInfoEntity;
-import com.anxu.livi.model.entity.wecommunity.CommunityUserEntity;
+import com.anxu.livi.model.dto.weCommunity.ChatInfoDetailDTO;
+import com.anxu.livi.model.entity.weCommunity.ChatInfoRelaEntity;
+import com.anxu.livi.model.entity.weCommunity.CommunityInfoEntity;
+import com.anxu.livi.model.entity.weCommunity.CommunityUserEntity;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;

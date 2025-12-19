@@ -3,7 +3,7 @@ package com.anxu.livi.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.anxu.livi.mapper.goods.GoodsImageMapper;
 import com.anxu.livi.mapper.goods.GoodsMapper;
-import com.anxu.livi.model.Result.PageResult;
+import com.anxu.livi.model.result.PageResult;
 import com.anxu.livi.model.vo.goods.GoodsBriefVO;
 import com.anxu.livi.model.vo.goods.GoodsDetailVO;
 import com.anxu.livi.model.entity.goods.GoodsEntity;

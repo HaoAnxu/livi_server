@@ -6,15 +6,15 @@ import com.anxu.livi.model.vo.goods.GoodsDetailVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import com.anxu.livi.model.Result.PageResult;
-import com.anxu.livi.model.Result.Result;
+import com.anxu.livi.model.result.PageResult;
+import com.anxu.livi.model.result.Result;
 import com.anxu.livi.model.dto.goods.GoodsQueryDTO;
 import com.anxu.livi.service.GoodsService;
 
 import java.util.List;
 
 /**
- * 商品相关接口
+ * 【商品相关接口】
  *
  * @Author: haoanxu
  * @Date: 2025/11/7 13:32

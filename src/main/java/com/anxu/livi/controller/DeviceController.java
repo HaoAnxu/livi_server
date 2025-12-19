@@ -1,6 +1,6 @@
 package com.anxu.livi.controller;
 
-import com.anxu.livi.model.Result.Result;
+import com.anxu.livi.model.result.Result;
 import com.anxu.livi.model.dto.device.DeviceInfoDTO;
 import com.anxu.livi.model.dto.device.DeviceTaskDTO;
 import com.anxu.livi.service.DeviceService;
@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Objects;
 
 /**
- * 家居设备相关接口
+ * 【家居设备相关接口】
  *
  * @Author: haoanxu
  * @Date: 2025/12/4 10:40

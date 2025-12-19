@@ -1,6 +1,6 @@
-package com.anxu.livi.model.dto.wecommunity;
+package com.anxu.livi.model.dto.weCommunity;
 
-import com.anxu.livi.model.entity.wecommunity.ChatInfoEntity;
+import com.anxu.livi.model.entity.weCommunity.ChatInfoEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,7 +1,7 @@
 package com.anxu.livi.mapper.weCommunity;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.anxu.livi.model.entity.wecommunity.ChatInfoEntity;
+import com.anxu.livi.model.entity.weCommunity.ChatInfoEntity;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

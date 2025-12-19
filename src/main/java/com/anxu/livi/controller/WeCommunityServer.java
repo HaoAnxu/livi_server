@@ -6,12 +6,12 @@ import com.alibaba.fastjson2.JSONObject;
 import com.anxu.livi.common.emums.webSocket.MsgTypeEnum;
 import com.anxu.livi.common.emums.webSocket.ReadStatusEnum;
 import com.anxu.livi.mapper.user.UserMapper;
-import com.anxu.livi.model.Result.WebSocketResult;
-import com.anxu.livi.model.dto.wecommunity.ChatHistoryQueryDTO;
-import com.anxu.livi.model.dto.wecommunity.ChatInfoDetailDTO;
-import com.anxu.livi.model.vo.wecommunity.ChatHistoryVO;
-import com.anxu.livi.model.entity.wecommunity.ChatInfoEntity;
-import com.anxu.livi.model.entity.wecommunity.ChatInfoRelaEntity;
+import com.anxu.livi.model.result.WebSocketResult;
+import com.anxu.livi.model.dto.weCommunity.ChatHistoryQueryDTO;
+import com.anxu.livi.model.dto.weCommunity.ChatInfoDetailDTO;
+import com.anxu.livi.model.vo.weCommunity.ChatHistoryVO;
+import com.anxu.livi.model.entity.weCommunity.ChatInfoEntity;
+import com.anxu.livi.model.entity.weCommunity.ChatInfoRelaEntity;
 import com.anxu.livi.service.WeCommunityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * WeCommunity—WebSocket接口
+ * W【eCommunity—WebSocket接口】
  *
  * @Author: haoanxu
  * @Date: 2025/11/21 11:01

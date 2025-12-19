@@ -1,4 +1,4 @@
-package com.anxu.livi.model.vo.wecommunity;
+package com.anxu.livi.model.vo.weCommunity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

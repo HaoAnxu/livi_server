@@ -1,6 +1,6 @@
 package com.anxu.livi.service;
 
-import com.anxu.livi.model.Result.PageResult;
+import com.anxu.livi.model.result.PageResult;
 import com.anxu.livi.model.vo.goods.GoodsBriefVO;
 import com.anxu.livi.model.vo.goods.GoodsDetailVO;
 import com.anxu.livi.model.dto.goods.GoodsQueryDTO;
