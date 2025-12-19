@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.anxu.livi.mapper.goods.GoodsImageMapper;
 import com.anxu.livi.mapper.goods.GoodsMapper;
 import com.anxu.livi.model.Result.PageResult;
+import com.anxu.livi.model.vo.goods.GoodsBriefVO;
 import com.anxu.livi.model.vo.goods.GoodsDetailVO;
 import com.anxu.livi.model.entity.goods.GoodsEntity;
 import com.anxu.livi.model.entity.goods.GoodsImageEntity;
@@ -16,6 +17,9 @@ import com.anxu.livi.model.dto.goods.GoodsQueryDTO;
 import com.anxu.livi.service.GoodsService;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 /**
  * 商品相关服务实现类
@@ -69,8 +73,19 @@ public class GoodsServiceImpl implements GoodsService {
             queryWrapper.orderByDesc("update_time");
         }
         Page<GoodsEntity> resultPage = this.goodsMapper.selectPage(page, queryWrapper);
+        // 转换为VO列表
+        List<GoodsBriefVO> goodsBriefVOList = new ArrayList<>();
+        for (GoodsEntity goodsEntity : resultPage.getRecords()) {
+            GoodsBriefVO goodsBriefVO = BeanUtil.copyProperties(goodsEntity, GoodsBriefVO.class);
+            Double goodsOriginalPrice = goodsEntity.getGoodsPrice();
+            BigDecimal res = new BigDecimal(goodsOriginalPrice)
+                    .multiply(new BigDecimal("1.2"))//计算原价
+                    .setScale(2, RoundingMode.HALF_UP);//保留2位小数，四舍五入
+            goodsBriefVO.setGoodsOriginalPrice(res.doubleValue());
+            goodsBriefVOList.add(goodsBriefVO);
+        }
         // 转换类型
-        return new PageResult(resultPage.getTotal(), resultPage.getRecords());
+        return new PageResult(resultPage.getTotal(), goodsBriefVOList);
     }
 
     //    更新并重新统计商品评分
@@ -104,5 +119,26 @@ public class GoodsServiceImpl implements GoodsService {
         List<GoodsImageEntity> goodsImageEntityList = this.goodsImageMapper.selectList(queryWrapper);
         goodsDetailVO.setGoodsImageEntityList(goodsImageEntityList);
         return goodsDetailVO;
+    }
+
+    //    查询12个热卖商品
+    @Override
+    public List<GoodsBriefVO> queryHotGoods() {
+        QueryWrapper<GoodsEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByDesc("goods_sales");
+        queryWrapper.last("limit 12");
+        queryWrapper.gt("goods_stock", 0);
+        List<GoodsEntity> goodsEntityList = this.goodsMapper.selectList(queryWrapper);
+        List<GoodsBriefVO> goodsBriefVOList = new ArrayList<>();
+        for (GoodsEntity goodsEntity : goodsEntityList) {
+            GoodsBriefVO goodsBriefVO = BeanUtil.copyProperties(goodsEntity, GoodsBriefVO.class);
+            Double goodsOriginalPrice = goodsEntity.getGoodsPrice();
+            BigDecimal res = new BigDecimal(goodsOriginalPrice)
+                    .multiply(new BigDecimal("1.2"))//计算原价
+                            .setScale(2, RoundingMode.HALF_UP);//保留2位小数，四舍五入
+            goodsBriefVO.setGoodsOriginalPrice(res.doubleValue());
+            goodsBriefVOList.add(goodsBriefVO);
+        }
+        return goodsBriefVOList;
     }
 }

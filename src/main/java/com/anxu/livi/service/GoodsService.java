@@ -1,8 +1,11 @@
 package com.anxu.livi.service;
 
 import com.anxu.livi.model.Result.PageResult;
+import com.anxu.livi.model.vo.goods.GoodsBriefVO;
 import com.anxu.livi.model.vo.goods.GoodsDetailVO;
 import com.anxu.livi.model.dto.goods.GoodsQueryDTO;
+
+import java.util.List;
 
 /**
  * 商品相关服务接口
@@ -17,4 +20,6 @@ public interface GoodsService {
     Integer resetScore();
     //    查询单个商品详情
     GoodsDetailVO queryGoodsDetail(Long goodsId);
+    //    查询20个热卖商品
+    List<GoodsBriefVO> queryHotGoods();
 }

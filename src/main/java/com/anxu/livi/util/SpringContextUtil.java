@@ -11,7 +11,8 @@ import org.springframework.stereotype.Component;
  * @Author: haoanxu
  * @Date: 2025/12/15
  */
-@Component // 必须加@Component，让Spring扫描并初始化
+@Component
+//这是 Spring 提供的一个 “感知接口”，实现该接口的类，Spring 在初始化时会自动调用 setApplicationContext 方法，把容器的上下文（ApplicationContext）传进来
 public class SpringContextUtil implements ApplicationContextAware {
 
     // 静态变量存储Spring上下文

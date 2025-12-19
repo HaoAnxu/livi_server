@@ -17,5 +17,5 @@ public class GoodsQueryDTO {
     private String goodsType;
     private String sortRule;
     private Integer page = 1;
-    private Integer pageSize = 10;
+    private Integer pageSize = 12;
 }

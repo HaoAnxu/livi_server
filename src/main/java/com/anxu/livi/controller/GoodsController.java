@@ -1,6 +1,7 @@
 package com.anxu.livi.controller;
 
 import com.anxu.livi.common.annotation.OperateLog;
+import com.anxu.livi.model.vo.goods.GoodsBriefVO;
 import com.anxu.livi.model.vo.goods.GoodsDetailVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,9 @@ import com.anxu.livi.model.Result.PageResult;
 import com.anxu.livi.model.Result.Result;
 import com.anxu.livi.model.dto.goods.GoodsQueryDTO;
 import com.anxu.livi.service.GoodsService;
+
+import java.util.List;
+
 /**
  * 商品相关接口
  *
@@ -20,6 +24,14 @@ import com.anxu.livi.service.GoodsService;
 public class GoodsController {
     @Autowired
     private GoodsService goodsService;
+
+    //首页方法-查询20个热卖商品
+    @GetMapping("/goods/queryHotGoods")
+    public Result queryHotGoods(){
+        log.info("查询12个热卖商品");
+        List<GoodsBriefVO> goodsBriefVOList = goodsService.queryHotGoods();
+        return Result.success(goodsBriefVOList);
+    }
 
     //    查询商品列表
     @OperateLog("查询商品列表")
