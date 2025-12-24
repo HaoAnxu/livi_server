@@ -248,21 +248,160 @@ public class WePostServiceImpl implements WePostService {
         return BeanUtil.copyProperties(postInfoEntity, PostInfoVO.class);
     }
 
-    // 分页查询帖子评论列表
+    // 根据postId分页查询帖子对应的根评论信息列表，包括用户头像和用户名
     @Override
-    public List<PostCommentVO> listWePostComment(PageDTO pageDTO) {
+    public PageResult listWePostComment(PageDTO pageDTO) {
+        PageResult pageResult = new PageResult();
         if (pageDTO.getPage() == null || pageDTO.getPageSize() == null) {
             pageDTO.setPage(1);
             pageDTO.setPageSize(10);
         }
-        Page<PostCommentEntity> pagePostCommentEntity = new Page<>(pageDTO.getPage(), pageDTO.getPageSize());
-        // 分页查询帖子评论列表
+        Page<PostCommentEntity> page = new Page<>(pageDTO.getPage(), pageDTO.getPageSize());
+        // 分页查询帖子根评论列表
         QueryWrapper<PostCommentEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("post_id", pageDTO.getId());
+        queryWrapper.eq("is_deleted", 0);
+        queryWrapper.eq("parent_id", 0);
         queryWrapper.orderByDesc("create_time");
         // 分页查询帖子评论列表
-        postCommentMapper.selectPage(pagePostCommentEntity, queryWrapper);
-        return BeanUtil.copyToList(pagePostCommentEntity.getRecords(), PostCommentVO.class);
+        postCommentMapper.selectPage(page, queryWrapper);
+        pageResult.setTotal(page.getTotal());
+        // 提取所有userId
+        Set<Integer> userIds = page.getRecords().stream()
+                .map(PostCommentEntity::getUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        // 提取所有toUserId
+        Set<Integer> toUserIds = page.getRecords().stream()
+                .map(PostCommentEntity::getToUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        // 合并所有userId
+        userIds.addAll(toUserIds);
+        // 批量查询用户信息
+        Map<Integer, UserInfoVO> userInfoMap = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            List<UserInfoEntity> userEntities = userMapper.selectBatchIds(userIds);
+            userInfoMap = userEntities.stream()
+                    .collect(Collectors.toMap(UserInfoEntity::getId, userEntity -> {
+                        UserInfoVO vo = new UserInfoVO();
+                        vo.setUsername(userEntity.getUsername());
+                        vo.setAvatar(userEntity.getAvatar());
+                        return vo;
+                    }));
+        }
+        List<PostCommentVO> postCommentVO = BeanUtil.copyToList(page.getRecords(), PostCommentVO.class);
+        for (PostCommentVO commentVO : postCommentVO) {
+            UserInfoVO userVO = userInfoMap.get(commentVO.getUserId());
+            if (userVO != null) {
+                commentVO.setUserName(userVO.getUsername());
+                commentVO.setUserAvatar(userVO.getAvatar());
+            }
+            UserInfoVO toUserVO = userInfoMap.get(commentVO.getToUserId());
+            if (toUserVO != null) {
+                commentVO.setToUserName(toUserVO.getUsername());
+            }
+        }
+        pageResult.setRows(postCommentVO);
+        return pageResult;
+    }
+
+    // 根据commentId分页查询根评论的子评论列表
+    @Override
+    public PageResult listWePostReplyComment(PageDTO pageDTO) {
+        PageResult pageResult = new PageResult();
+        if (pageDTO.getPage() == null || pageDTO.getPageSize() == null) {
+            pageDTO.setPage(1);
+            pageDTO.setPageSize(10);
+        }
+        Page<PostCommentEntity> page = new Page<>(pageDTO.getPage(), pageDTO.getPageSize());
+        // 分页查询帖子子评论列表
+        QueryWrapper<PostCommentEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("is_deleted", 0);
+        queryWrapper.eq("parent_id", pageDTO.getId());
+        queryWrapper.orderByDesc("create_time");
+        // 分页查询帖子子评论列表
+        postCommentMapper.selectPage(page, queryWrapper);
+        pageResult.setTotal(page.getTotal());
+        // 提取所有userId
+        Set<Integer> userIds = page.getRecords().stream()
+                .map(PostCommentEntity::getUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        // 提取所有toUserId
+        Set<Integer> toUserIds = page.getRecords().stream()
+                .map(PostCommentEntity::getToUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        // 合并所有userId
+        userIds.addAll(toUserIds);
+        // 批量查询用户信息
+        Map<Integer, UserInfoVO> userInfoMap = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            List<UserInfoEntity> userEntities = userMapper.selectBatchIds(userIds);
+            userInfoMap = userEntities.stream()
+                    .collect(Collectors.toMap(UserInfoEntity::getId, userEntity -> {
+                        UserInfoVO vo = new UserInfoVO();
+                        vo.setUsername(userEntity.getUsername());
+                        vo.setAvatar(userEntity.getAvatar());
+                        return vo;
+                    }));
+        }
+        List<PostCommentVO> postCommentVO = BeanUtil.copyToList(page.getRecords(), PostCommentVO.class);
+        for (PostCommentVO commentVO : postCommentVO) {
+            UserInfoVO userVO = userInfoMap.get(commentVO.getUserId());
+            if (userVO != null) {
+                commentVO.setUserName(userVO.getUsername());
+                commentVO.setUserAvatar(userVO.getAvatar());
+            }
+            UserInfoVO toUserVO = userInfoMap.get(commentVO.getToUserId());
+            if (toUserVO != null) {
+                commentVO.setToUserName(toUserVO.getUsername());
+            }
+        }
+        pageResult.setRows(postCommentVO);
+        return pageResult;
+    }
+
+    // 查询根评论ID列表对应的回复数
+    @Override
+    public Map<Integer, Integer> queryReplyCount(List<Integer> commentIds) {
+        if (CollectionUtils.isEmpty(commentIds)) {
+            return new HashMap<>();
+        }
+
+        // SQL查询：批量查根评论ID对应的回复数
+        // mp的selectMaps方法返回的就是List<Map<String, Object>>，每个Map对应一行数据（parent_id, replyCount）
+        List<Map<String, Object>> countList = postCommentMapper.selectMaps(
+                new QueryWrapper<PostCommentEntity>()
+                        .select("parent_id, COUNT(*) as replyCount") // 字段别名用replyCount，和后面对应
+                        .in("parent_id", commentIds)                // 批量查多个根评论ID
+                        .eq("is_deleted", 0)                        // 只查未删除的回复
+                        .groupBy("parent_id")                       // 按根评论ID分组统计
+        );
+
+        // 把查询结果转成 Map<根评论ID, 回复数>
+        Map<Integer, Integer> replyCountMap = countList.stream()
+                // 第一步：把每个SQL返回的Map（parent_id, replyCount）转成键值对Entry
+                .map(map -> {
+                    Integer parentId = Integer.parseInt(map.get("parent_id").toString());
+                    Integer count = Integer.parseInt(map.get("replyCount").toString());
+                    // 封装成Entry（键=根评论ID，值=回复数）
+                    return new AbstractMap.SimpleEntry<>(parentId, count);
+                })
+                // 第二步：把Entry收集成Map（解决核心语法问题）
+                .collect(Collectors.toMap(
+                        AbstractMap.SimpleEntry::getKey,   // Map的key = Entry的key（根评论ID）
+                        AbstractMap.SimpleEntry::getValue  // Map的value = Entry的value（回复数）
+                ));
+        // 4. Stream流：补全无回复的根评论（回复数=0）
+        commentIds.stream()
+                // 过滤条件：根评论ID不在replyCountMap里（说明该根评论没有回复）
+                .filter(rootCommentId -> !replyCountMap.containsKey(rootCommentId))
+                // 给这些ID赋值回复数=0
+                .forEach(rootCommentId -> replyCountMap.put(rootCommentId, 0));
+
+        return replyCountMap;
     }
 
     // 创建新帖子
@@ -289,17 +428,19 @@ public class WePostServiceImpl implements WePostService {
         return postCommentMapper.insert(postCommentEntity) > 0;
     }
 
-    // 删除帖子根据postId
+    // 回复评论
     @Override
-    public boolean deleteWePost(Integer postId) {
-        // 先查询帖子是否存在
-        PostInfoEntity postInfoEntity = postInfoMapper.selectById(postId);
-        if (postInfoEntity == null) {
-            log.info("删除操作：帖子不存在, postId: {}", postId);
+    public boolean replyWePostComment(PostCommentDTO postCommentDTO) {
+        //先查询评论是否存在
+        PostCommentEntity postCommentEntity = postCommentMapper.selectById(postCommentDTO.getParentId());
+        if (postCommentEntity == null) {
+            log.info("评论不存在, commentId: {}", postCommentDTO.getParentId());
             return false;
         }
-        // 删除帖子
-        return postInfoMapper.deleteById(postId) > 0;
+        // 转换为实体类
+        PostCommentEntity replyPostCommentEntity = BeanUtil.copyProperties(postCommentDTO, PostCommentEntity.class);
+        // 保存回复评论
+        return postCommentMapper.insert(replyPostCommentEntity) > 0;
     }
 
     // 删除评论根据commentId
@@ -312,7 +453,21 @@ public class WePostServiceImpl implements WePostService {
             return false;
         }
         // 删除评论
-        return postCommentMapper.deleteById(commentId) > 0;
+        postCommentEntity.setIsDeleted(true);
+        return postCommentMapper.updateById(postCommentEntity) > 0;
+    }
+
+    // 删除帖子根据postId
+    @Override
+    public boolean deleteWePost(Integer postId) {
+        // 先查询帖子是否存在
+        PostInfoEntity postInfoEntity = postInfoMapper.selectById(postId);
+        if (postInfoEntity == null) {
+            log.info("删除操作：帖子不存在, postId: {}", postId);
+            return false;
+        }
+        // 删除帖子
+        return postInfoMapper.deleteById(postId) > 0;
     }
 
     // 查询圈子列表,随机返回四个圈子

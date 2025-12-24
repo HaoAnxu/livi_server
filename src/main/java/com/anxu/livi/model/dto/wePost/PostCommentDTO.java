@@ -16,6 +16,9 @@ public class PostCommentDTO {
 
     private Integer userId; // 用户ID
 
-    private String commentContent; // 评论内容
+    private Integer parentId; // 父评论ID, 0表示根评论
 
+    private Integer toUserId; // 回复用户ID, 0表示不是回复
+
+    private String content; // 评论内容
 }

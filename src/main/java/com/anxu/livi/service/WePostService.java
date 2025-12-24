@@ -7,6 +7,7 @@ import com.anxu.livi.model.dto.wePost.PostInfoDTO;
 import com.anxu.livi.model.vo.wePost.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * WePost相关服务接口
@@ -23,7 +24,13 @@ public interface WePostService {
     PostInfoVO detailWePost(Integer postId);
 
     // 查询帖子评论列表
-    List<PostCommentVO> listWePostComment(PageDTO pageDTO);
+    PageResult listWePostComment(PageDTO pageDTO);
+
+    // 查询根评论的子评论列表
+    PageResult listWePostReplyComment(PageDTO pageDTO);
+
+    // 查询评论下的子评论数量
+    Map<Integer,Integer> queryReplyCount(List<Integer> commentIds);
 
     // 创建帖子
     boolean saveWePost(PostInfoDTO postInfoDTO);
@@ -33,6 +40,9 @@ public interface WePostService {
 
     // 发评论
     boolean saveWePostComment(PostCommentDTO postCommentDTO);
+
+    // 回复评论
+    boolean replyWePostComment(PostCommentDTO postCommentDTO);
 
     // 删除帖子根据postId
     boolean deleteWePost(Integer postId);

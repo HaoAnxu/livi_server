@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 【WePost-相关接口】
@@ -81,12 +82,28 @@ public class WePostController {
         return Result.success(postInfoVO);
     }
 
-    // 分页查询帖子评论列表
+    // 分页查询帖子根评论列表
     @PostMapping("/wePost/comment/queryCommentList")
     public Result listWePostComment(@RequestBody PageDTO pageDTO) {
         log.info("分页查询帖子评论列表, postId: {}, page: {}, pageSize: {}", pageDTO.getId(), pageDTO.getPage(), pageDTO.getPageSize());
-        List<PostCommentVO> postCommentVOList = wePostService.listWePostComment(pageDTO);
-        return Result.success(postCommentVOList);
+        PageResult pageResult = wePostService.listWePostComment(pageDTO);
+        return Result.success(pageResult);
+    }
+
+    //分页查询根评论的子评论列表，根据commentId
+    @PostMapping("/wePost/comment/queryReplyCommentList")
+    public Result listWePostReplyComment(@RequestBody PageDTO pageDTO) {
+        log.info("分页查询根评论的子评论列表, commentId: {}, page: {}, pageSize: {}", pageDTO.getId(), pageDTO.getPage(), pageDTO.getPageSize());
+        PageResult pageResult = wePostService.listWePostReplyComment(pageDTO);
+        return Result.success(pageResult);
+    }
+
+    //批量查询根评论的回复数量
+    @PostMapping("/wePost/comment/queryReplyCount")
+    public Result queryReplyCount(@RequestBody List<Integer> commentIds) {
+        log.info("批量查询根评论的回复数量, commentIds: {}", commentIds);
+        Map<Integer,Integer> replyCountMap = wePostService.queryReplyCount(commentIds);
+        return Result.success(replyCountMap);
     }
 
     // 发帖子
@@ -109,6 +126,17 @@ public class WePostController {
             return Result.success("发送成功");
         }
         return Result.error("发送失败, 未知原因");
+    }
+
+    // 回复评论
+    @PostMapping("/permission/wePost/replyComment")
+    public Result replyWePostComment(@RequestBody PostCommentDTO postCommentDTO) {
+        log.info("回复评论, postCommentDTO: {}", postCommentDTO);
+        boolean result = wePostService.replyWePostComment(postCommentDTO);
+        if (result) {
+            return Result.success("回复成功");
+        }
+        return Result.error("回复失败, 未知原因");
     }
 
     // 删帖子根据postId
