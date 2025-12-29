@@ -566,7 +566,6 @@ public class WePostServiceImpl implements WePostService {
         PageHelper.startPage(pageDTO.getPage(), pageDTO.getPageSize());
         // 执行查询（PageHelper会自动拦截这条SQL，添加分页条件）
         List<PostCircleEntity> list = postCircleUserMapper.selectUserCircleInfo(pageDTO.getId());
-        System.out.println(list);
         // 将查询结果包装为Page对象，获取分页信息（总数、分页数据）
         PageInfo<PostCircleEntity> pageInfo = new PageInfo<>(list);
         PageResult pageResult = new PageResult();

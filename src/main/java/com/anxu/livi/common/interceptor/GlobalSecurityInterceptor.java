@@ -37,44 +37,44 @@ public class GlobalSecurityInterceptor implements HandlerInterceptor {
         response.setCharacterEncoding("UTF-8");
         response.setContentType("application/json;charset=UTF-8");
 
-//        // 2. 时间戳校验
-//        String timestamp = request.getHeader("timestamp");
-//        if (!validateTimestamp(timestamp)) {
-//            returnError(response, 400, "请求超时（时间戳无效）");
-//            return false;
-//        }
-//
-//        // 3. 签名校验
-//        String nonce = request.getHeader("nonce"); // 随机字符串（前端每次请求生成）
-//        String sign = request.getHeader("sign"); // 前端生成的签名
-//        if (!validateSign(timestamp, nonce, sign)) {
-//            returnError(response, 400, "签名无效（请求可能被篡改）");
-//            return false;
-//        }
-//
-//        // 4. JWT 校验（只对 /permission/** 路径做，登录后才能访问）
-//        String requestUrl = request.getRequestURI();
-//        if (requestUrl.startsWith("/permission/")) {
-//            String token = request.getHeader("token");
-//            // JWT 非空校验
-//            if (!StringUtils.hasLength(token)) {
-//                returnError(response, 401, "未登录，缺少 Token");
-//                log.warn("未登录，缺少 Token - 路径: {}", requestUrl);
-//                return false;
-//            }
-//            // JWT 合法性校验（防伪造、防过期）
-//            if (!jwtUtils.validateToken(token)) {
-//                returnError(response, 401, "Token 非法或已过期");
-//                log.warn("Token 非法或已过期 - 路径: {}", requestUrl);
-//                return false;
-//            }
-//            // 提取用户信息存入 ThreadLocal（供后续业务使用）
-//            Integer userId = jwtUtils.getUserId(token);
-//            CurrentHolder.setCurrentId(userId);
-//        }
+        // 2. 时间戳校验
+        String timestamp = request.getHeader("timestamp");
+        if (!validateTimestamp(timestamp)) {
+            returnError(response, 400, "请求超时（时间戳无效）");
+            return false;
+        }
+
+        // 3. 签名校验
+        String nonce = request.getHeader("nonce"); // 随机字符串（前端每次请求生成）
+        String sign = request.getHeader("sign"); // 前端生成的签名
+        if (!validateSign(timestamp, nonce, sign)) {
+            returnError(response, 400, "签名无效（请求可能被篡改）");
+            return false;
+        }
+
+        // 4. JWT 校验（只对 /permission/** 路径做，登录后才能访问）
+        String requestUrl = request.getRequestURI();
+        if (requestUrl.startsWith("/permission/")) {
+            String token = request.getHeader("token");
+            // JWT 非空校验
+            if (!StringUtils.hasLength(token)) {
+                returnError(response, 401, "未登录，缺少 Token");
+                log.warn("未登录，缺少 Token - 路径: {}", requestUrl);
+                return false;
+            }
+            // JWT 合法性校验（防伪造、防过期）
+            if (!jwtUtils.validateToken(token)) {
+                returnError(response, 401, "Token 非法或已过期");
+                log.warn("Token 非法或已过期 - 路径: {}", requestUrl);
+                return false;
+            }
+            // 提取用户信息存入 ThreadLocal（供后续业务使用）
+            Integer userId = jwtUtils.getUserId(token);
+            CurrentHolder.setCurrentId(userId);
+        }
 
         // 所有校验通过，放行
-//        log.info("安全校验通过 - 路径: {}", requestUrl);
+        log.info("安全校验通过 - 路径: {}", requestUrl);
         return true;
     }
     // 请求完成后，清空 ThreadLocal（避免内存泄漏）

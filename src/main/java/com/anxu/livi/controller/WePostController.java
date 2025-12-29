@@ -29,7 +29,7 @@ public class WePostController {
     //查询圈子列表-随机4个
     @PostMapping("/wePost/queryCircleList")
     private Result listWePostCircle() {
-        log.info("查询圈子列表,");
+        log.info("查询圈子列表，随机");
         List<PostCircleVO> postList = wePostService.listWePostCircle();
         return Result.success(postList);
     }

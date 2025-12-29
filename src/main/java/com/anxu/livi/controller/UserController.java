@@ -27,6 +27,10 @@ public class UserController {
     @Autowired
     private RedisTemplate<Object, Object> redisTemplate;
 
+    @GetMapping("/user")
+    public Result getUserInfo() {
+        return Result.success("yes");
+    }
     //登录
     @PostMapping("/user/login")
     public Result login(@RequestBody UserInfoEntity userInfoEntity) {
