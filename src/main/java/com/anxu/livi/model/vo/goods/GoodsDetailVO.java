@@ -30,6 +30,7 @@ public class GoodsDetailVO {
     private String goodsThumbnail;//商品缩略图
     private Integer goodsStatus;//商品状态-0表示下架，1表示上架
     private Double goodsScore;//商品评分
+    private String goodsDept;//商品所属部门
     private List<GoodsImageVO> goodsImageVOList;//商品图片列表
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;//创建时间
