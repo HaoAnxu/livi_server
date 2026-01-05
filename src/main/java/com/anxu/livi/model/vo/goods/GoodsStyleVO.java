@@ -14,6 +14,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GoodsStyleVO {
-    private Integer style_id;//商品款式id
+    private Integer styleId;//商品款式id
     private String goodsStyle;//款式名称
 }

@@ -1,4 +1,4 @@
-package com.anxu.livi.common.emums.Device;
+package com.anxu.livi.common.emums.device;
 
 import lombok.Getter;
 

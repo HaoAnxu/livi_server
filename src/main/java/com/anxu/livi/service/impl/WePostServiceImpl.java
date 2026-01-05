@@ -79,6 +79,10 @@ public class WePostServiceImpl implements WePostService {
                 .map(PostInfoEntity::getUserId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
+        //提取所有postId
+        Set<Integer> postIds = records.stream()
+                .map(PostInfoEntity::getPostId)
+                .collect(Collectors.toSet());
 
         //批量查询圈子信息
         Map<Integer, String> circleNameMap = new HashMap<>();
@@ -101,6 +105,29 @@ public class WePostServiceImpl implements WePostService {
                     }));
         }
 
+        //批量查询评论数量信息
+        Map<Integer, Long> commentCountMap = new HashMap<>();
+        if (!postIds.isEmpty()) {
+            postIds.forEach(postId -> commentCountMap.put(postId, 0L));
+
+            //批量查询指定 postId 的评论数（分组统计）
+            List<Map<String, Object>> countList = postCommentMapper.selectMaps(
+                    new QueryWrapper<PostCommentEntity>()
+                            .select("post_id", "count(*) as comment_count")
+                            .in("post_id", postIds)
+                            .eq("is_deleted", 0)
+                            .groupBy("post_id")
+            );
+
+            for (Map<String, Object> map : countList) {
+                Number postIdNum = (Number) map.get("post_id");
+                Integer postId = postIdNum.intValue();
+                // count(*) 返回 Long 类型
+                Long count = (Long) map.get("comment_count");
+                commentCountMap.put(postId, count);
+            }
+        }
+
         //组装VO
         List<PostInfoVO> postInfoVO = BeanUtil.copyToList(records, PostInfoVO.class);
         for (PostInfoVO infoVO : postInfoVO) {
@@ -109,6 +136,7 @@ public class WePostServiceImpl implements WePostService {
             if (userVO != null) {
                 infoVO.setUserName(userVO.getUsername());
                 infoVO.setUserAvatar(userVO.getAvatar());
+                infoVO.setCommentCount(commentCountMap.getOrDefault(infoVO.getPostId(), 0L));
             }
         }
         return postInfoVO;
@@ -143,6 +171,10 @@ public class WePostServiceImpl implements WePostService {
                 .map(PostInfoEntity::getUserId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
+        //提取所有postId
+        Set<Integer> postIds = records.stream()
+                .map(PostInfoEntity::getPostId)
+                .collect(Collectors.toSet());
 
         //批量查询圈子信息
         Map<Integer, String> circleNameMap = new HashMap<>();
@@ -165,6 +197,29 @@ public class WePostServiceImpl implements WePostService {
                     }));
         }
 
+        //批量查询评论数量信息
+        Map<Integer, Long> commentCountMap = new HashMap<>();
+        if (!postIds.isEmpty()) {
+            postIds.forEach(postId -> commentCountMap.put(postId, 0L));
+
+            //批量查询指定 postId 的评论数（分组统计）
+            List<Map<String, Object>> countList = postCommentMapper.selectMaps(
+                    new QueryWrapper<PostCommentEntity>()
+                            .select("post_id", "count(*) as comment_count")
+                            .in("post_id", postIds)
+                            .eq("is_deleted", 0)
+                            .groupBy("post_id")
+            );
+
+            for (Map<String, Object> map : countList) {
+                Number postIdNum = (Number) map.get("post_id");
+                Integer postId = postIdNum.intValue();
+                // count(*) 返回 Long 类型
+                Long count = (Long) map.get("comment_count");
+                commentCountMap.put(postId, count);
+            }
+        }
+
         //组装VO
         List<PostInfoVO> postInfoVO = BeanUtil.copyToList(records, PostInfoVO.class);
         for (PostInfoVO infoVO : postInfoVO) {
@@ -173,6 +228,7 @@ public class WePostServiceImpl implements WePostService {
             if (userVO != null) {
                 infoVO.setUserName(userVO.getUsername());
                 infoVO.setUserAvatar(userVO.getAvatar());
+                infoVO.setCommentCount(commentCountMap.getOrDefault(infoVO.getPostId(), 0L));
             }
         }
         return postInfoVO;
@@ -205,6 +261,11 @@ public class WePostServiceImpl implements WePostService {
                 .map(PostInfoEntity::getUserId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
+        //提取所有postId
+        Set<Integer> postIds = records.stream()
+                .map(PostInfoEntity::getPostId)
+                .collect(Collectors.toSet());
+
 
         //批量查询圈子信息
         Map<Integer, String> circleNameMap = new HashMap<>();
@@ -227,6 +288,29 @@ public class WePostServiceImpl implements WePostService {
                     }));
         }
 
+        //批量查询评论数量信息
+        Map<Integer, Long> commentCountMap = new HashMap<>();
+        if (!postIds.isEmpty()) {
+            postIds.forEach(postId -> commentCountMap.put(postId, 0L));
+
+            //批量查询指定 postId 的评论数（分组统计）
+            List<Map<String, Object>> countList = postCommentMapper.selectMaps(
+                    new QueryWrapper<PostCommentEntity>()
+                            .select("post_id", "count(*) as comment_count")
+                            .in("post_id", postIds)
+                            .eq("is_deleted", 0)
+                            .groupBy("post_id")
+            );
+
+            for (Map<String, Object> map : countList) {
+                Number postIdNum = (Number) map.get("post_id");
+                Integer postId = postIdNum.intValue();
+                // count(*) 返回 Long 类型
+                Long count = (Long) map.get("comment_count");
+                commentCountMap.put(postId, count);
+            }
+        }
+
         //组装VO
         List<PostInfoVO> postInfoVO = BeanUtil.copyToList(records, PostInfoVO.class);
         for (PostInfoVO infoVO : postInfoVO) {
@@ -235,6 +319,7 @@ public class WePostServiceImpl implements WePostService {
             if (userVO != null) {
                 infoVO.setUserName(userVO.getUsername());
                 infoVO.setUserAvatar(userVO.getAvatar());
+                infoVO.setCommentCount(commentCountMap.getOrDefault(infoVO.getPostId(), 0L));
             }
         }
         return postInfoVO;

@@ -1,12 +1,14 @@
 package com.anxu.livi.service;
 
 import com.anxu.livi.model.dto.goods.GoodsOrderDTO;
+import com.anxu.livi.model.dto.goods.UserOrderDTO;
 import com.anxu.livi.model.dto.wePost.PageDTO;
 import com.anxu.livi.model.result.PageResult;
 import com.anxu.livi.model.vo.goods.GoodsBriefVO;
 import com.anxu.livi.model.vo.goods.GoodsCommentsVO;
 import com.anxu.livi.model.vo.goods.GoodsDetailVO;
 import com.anxu.livi.model.dto.goods.GoodsQueryDTO;
+import com.anxu.livi.model.vo.goods.GoodsOrderVO;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,7 +29,13 @@ public interface GoodsService {
     //    查询单个商品评论列表
     PageResult queryGoodsComment(PageDTO pageDTO);
     //    下单
-    void order(GoodsOrderDTO goodsOrderDTO);
+    String order(GoodsOrderDTO goodsOrderDTO);
     //    根据model，style和goodsId查询价格
     BigDecimal queryPrice(Integer modelId, Integer styleId, Integer goodsId);
+    //    根据订单编号查询订单价格
+    BigDecimal queryOrderPrice(String orderNo);
+    //    支付（简单实现）
+    void pay(String orderNo);
+    //    查询用户全部订单
+    PageResult queryUserOrders(UserOrderDTO userOrderDTO);
 }

@@ -26,9 +26,9 @@ public class GoodsOrderEntity {
 
     private Integer userId;//用户id
 
-    private String goodsModel;//商品型号
+    private Integer goodsModel;//商品型号
 
-    private String goodsStyle;//商品款式
+    private Integer goodsStyle;//商品款式
 
     private Integer goodsNum;//商品数量
 

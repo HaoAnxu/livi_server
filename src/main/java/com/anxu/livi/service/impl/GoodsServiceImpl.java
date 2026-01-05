@@ -2,9 +2,11 @@ package com.anxu.livi.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.lang.Assert;
+import com.anxu.livi.common.emums.goods.OrderStatusEnum;
 import com.anxu.livi.mapper.goods.*;
 import com.anxu.livi.mapper.user.UserMapper;
 import com.anxu.livi.model.dto.goods.GoodsOrderDTO;
+import com.anxu.livi.model.dto.goods.UserOrderDTO;
 import com.anxu.livi.model.dto.wePost.PageDTO;
 import com.anxu.livi.model.entity.goods.*;
 import com.anxu.livi.model.entity.user.UserInfoEntity;
@@ -57,7 +59,7 @@ public class GoodsServiceImpl implements GoodsService {
     private GoodsConnectMapper goodsConnectMapper;
 
 
-    //    查询商品列表
+    // 查询商品列表
     @Override
     public PageResult queryGoods(GoodsQueryDTO goodsQueryDto) {
         //创建分页对象
@@ -74,13 +76,7 @@ public class GoodsServiceImpl implements GoodsService {
         }
 
         String sortRule = goodsQueryDto.getSortRule();
-        if ("by_price_asc".equals(sortRule)) {
-            // 价格升序（便宜优先）
-            queryWrapper.orderByAsc("goods_price");
-        } else if ("by_price_desc".equals(sortRule)) {
-            // 价格降序（贵的优先）
-            queryWrapper.orderByDesc("goods_price");
-        } else if ("by_sales".equals(sortRule)) {
+        if ("by_sales".equals(sortRule)) {
             // 销量降序
             queryWrapper.orderByDesc("goods_sales");
         } else if ("by_rating".equals(sortRule)) {
@@ -150,7 +146,7 @@ public class GoodsServiceImpl implements GoodsService {
         return new PageResult(resultPage.getTotal(), goodsBriefVOList);
     }
 
-    //    查询单个商品详情
+    // 查询单个商品详情
     @Override
     public GoodsDetailVO queryGoodsDetail(Long goodsId) {
         log.info("查询商品详情，商品id：{}", goodsId);
@@ -220,7 +216,7 @@ public class GoodsServiceImpl implements GoodsService {
         return goodsDetailVO;
     }
 
-    //    查询12个热卖商品
+    // 查询12个热卖商品
     @Override
     public List<GoodsBriefVO> queryHotGoods() {
         // 查询12个热卖商品
@@ -286,7 +282,7 @@ public class GoodsServiceImpl implements GoodsService {
         return goodsBriefVOList;
     }
 
-    //    查询单个商品评论列表
+    // 查询单个商品评论列表
     @Override
     public PageResult queryGoodsComment(PageDTO pageDTO) {
         if (pageDTO.getPage() == null || pageDTO.getPageSize() == null) {
@@ -345,9 +341,9 @@ public class GoodsServiceImpl implements GoodsService {
         return goodsConnectEntity.getGoodsPrice();
     }
 
-    //    创建订单
+    // 创建订单
     @Override
-    public void order(GoodsOrderDTO goodsOrderDTO) {
+    public String order(GoodsOrderDTO goodsOrderDTO) {
         // 校验
         Assert.isTrue(goodsOrderDTO.getGoodsId() != null, "商品id不能为空");
         Assert.isTrue(goodsOrderDTO.getUserId() != null, "用户id不能为空");
@@ -368,5 +364,113 @@ public class GoodsServiceImpl implements GoodsService {
         goodsOrderEntity.setOrderNo(orderNo);
         goodsOrderEntity.setOrderStatus(0);
         goodsOrderMapper.insert(goodsOrderEntity);
+        return orderNo;
+    }
+
+    //根据订单编号查询订单价格
+    @Override
+    public BigDecimal queryOrderPrice(String orderNo) {
+        // 校验
+        Assert.isTrue(orderNo != null, "订单编号不能为空");
+        GoodsOrderEntity goodsOrderEntity = goodsOrderMapper.selectOne(new QueryWrapper<GoodsOrderEntity>().eq("order_no", orderNo));
+        if (goodsOrderEntity == null) {
+            throw new IllegalArgumentException("订单不存在");
+        }
+        return goodsOrderEntity.getOrderPrice();
+    }
+
+    // 支付（简单实现）
+    @Override
+    public void pay(String orderNo) {
+        // 校验
+        Assert.isTrue(orderNo != null, "订单编号不能为空");
+        GoodsOrderEntity goodsOrderEntity = goodsOrderMapper.selectOne(new QueryWrapper<GoodsOrderEntity>().eq("order_no", orderNo));
+        if (goodsOrderEntity == null) {
+            throw new IllegalArgumentException("订单不存在");
+        }
+        // 校验订单状态
+        if (goodsOrderEntity.getOrderStatus() != 0) {
+            throw new IllegalArgumentException("订单状态错误");
+        }
+        // 支付成功，更新订单状态
+        goodsOrderEntity.setOrderStatus(1);
+        goodsOrderMapper.updateById(goodsOrderEntity);
+    }
+
+    // 查询订单
+    @Override
+    public PageResult queryUserOrders(UserOrderDTO userOrderDTO) {
+        PageResult pageResult = new PageResult();
+        // 校验
+        Assert.isTrue(userOrderDTO.getUserId() != null, "用户id不能为空");
+        // 分页参数默认值
+        if (userOrderDTO.getPage() == null) {
+            userOrderDTO.setPage(1);
+        }
+        if (userOrderDTO.getPageSize() == null) {
+            userOrderDTO.setPageSize(10);
+        }
+
+        Integer userId = userOrderDTO.getUserId();
+        String sortRule = userOrderDTO.getSortRule();
+        Integer page = userOrderDTO.getPage();
+        Integer pageSize = userOrderDTO.getPageSize();
+
+        //分页查询订单
+        Page<GoodsOrderEntity> pageGoodsOrderEntity = new Page<>(page, pageSize);
+        QueryWrapper<GoodsOrderEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", userId);
+        // 分类条件
+        if (sortRule != null && !sortRule.isEmpty()) {
+            Integer statusCode = OrderStatusEnum.getStatusCodeBySortRule(sortRule);
+            if (statusCode != null) {
+                queryWrapper.eq("order_status", statusCode);
+            }
+        }
+        Page<GoodsOrderEntity> goodsOrderEntityPage = goodsOrderMapper.selectPage(pageGoodsOrderEntity, queryWrapper);
+        pageResult.setTotal(goodsOrderEntityPage.getTotal());
+        List<GoodsOrderEntity> records = goodsOrderEntityPage.getRecords();
+
+        // 空订单直接返回空列表（避免后续流操作空指针）
+        if (records == null || records.isEmpty()) {
+            pageResult.setRows(new ArrayList<>());
+            return pageResult;
+        }
+
+        //提取所有goodsId
+        Set<Integer> goodsIds = records.stream()
+                .map(GoodsOrderEntity::getGoodsId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        // 商品ID集合为空时，直接转换VO（避免查空数据）
+        List<GoodsEntity> goodsList = new ArrayList<>();
+        if (!goodsIds.isEmpty()) {
+            goodsList = goodsMapper.selectBatchIds(goodsIds);
+        }
+
+        // 转Map
+        Map<Integer, GoodsEntity> goodsEntityMap = goodsList.stream()
+                .collect(Collectors.toMap(GoodsEntity::getGoodsId, item -> item, (k1, k2) -> k1));
+
+        // 转换OrderEntity到OrderVO，并填充商品详情
+        List<GoodsOrderVO> goodsOrderVOList = new ArrayList<>();
+        for (GoodsOrderEntity record : records) {
+            GoodsOrderVO vo = new GoodsOrderVO();
+            BeanUtil.copyProperties(record, vo);
+            // 填充商品详情（无对应商品时赋空，避免前端null指针）
+            GoodsEntity goodsEntity = goodsEntityMap.get(record.getGoodsId());
+            GoodsDetailVO goodsDetailVO = new GoodsDetailVO();
+            if (goodsEntity != null) {
+                BeanUtil.copyProperties(goodsEntity, goodsDetailVO);
+            }
+            vo.setGoodsDetailVO(goodsDetailVO);
+
+            goodsOrderVOList.add(vo);
+        }
+
+        // 设置最终返回的VO列表
+        pageResult.setRows(goodsOrderVOList);
+        return pageResult;
     }
 }

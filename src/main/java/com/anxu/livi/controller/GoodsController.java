@@ -2,9 +2,11 @@ package com.anxu.livi.controller;
 
 import com.anxu.livi.common.annotation.OperateLog;
 import com.anxu.livi.model.dto.goods.GoodsOrderDTO;
+import com.anxu.livi.model.dto.goods.UserOrderDTO;
 import com.anxu.livi.model.dto.wePost.PageDTO;
 import com.anxu.livi.model.vo.goods.GoodsBriefVO;
 import com.anxu.livi.model.vo.goods.GoodsDetailVO;
+import com.anxu.livi.model.vo.goods.GoodsOrderVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -78,7 +80,34 @@ public class GoodsController {
     @PostMapping("/permission/goods/createOrder")
     public Result order(@RequestBody GoodsOrderDTO goodsOrderDTO) {
         log.info("下单，参数：{}", goodsOrderDTO);
-        goodsService.order(goodsOrderDTO);
-        return Result.success("下单成功");
+        String orderNo = goodsService.order(goodsOrderDTO);
+        return Result.success(orderNo);
+    }
+
+    // 根据订单编号查询订单价格
+    @OperateLog("根据订单编号查询订单价格")
+    @PostMapping("/permission/goods/queryOrderPrice")
+    public Result queryOrderPrice(@RequestParam String orderNo) {
+        log.info("根据订单编号查询订单价格，参数：{}", orderNo);
+        BigDecimal price = goodsService.queryOrderPrice(orderNo);
+        return Result.success(price);
+    }
+
+    // 支付（简单实现）
+    @OperateLog("支付")
+    @PostMapping("/permission/goods/pay")
+    public Result pay(@RequestParam String orderNo) {
+        log.info("支付，参数：{}", orderNo);
+        goodsService.pay(orderNo);
+        return Result.success("支付成功");
+    }
+
+    // 分类查询用户全部订单
+    @OperateLog("查询用户全部订单")
+    @PostMapping("/permission/goods/queryUserOrders")
+    public Result queryUserOrders(@RequestBody UserOrderDTO userOrderDTO) {
+        log.info("查询用户全部订单，参数：{}", userOrderDTO);
+        PageResult pageResult = goodsService.queryUserOrders(userOrderDTO);
+        return Result.success(pageResult);
     }
 }

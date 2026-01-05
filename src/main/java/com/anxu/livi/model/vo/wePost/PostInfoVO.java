@@ -35,6 +35,8 @@ public class PostInfoVO {
 
     private String postImage; // 帖子图片
 
+    private Long commentCount;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime; // 创建时间
 }

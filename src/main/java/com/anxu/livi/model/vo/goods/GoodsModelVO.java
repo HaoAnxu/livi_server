@@ -14,6 +14,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GoodsModelVO {
-    private Integer model_id;//商品型号id
+    private Integer modelId;//商品型号id
     private String goodsModel;//商品型号名称
 }
