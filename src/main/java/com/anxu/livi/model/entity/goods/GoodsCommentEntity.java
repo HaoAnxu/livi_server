@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @TableName("pub_goods_comment")
 public class GoodsCommentEntity {
     @TableId(value = "comment_id", type = IdType.AUTO)
-    private Long commentId;//商品评论ID
+    private Integer commentId;//商品评论ID
 
     private Integer goodsId;//商品id,关联商品表
 

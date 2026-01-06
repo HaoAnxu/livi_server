@@ -1,5 +1,6 @@
 package com.anxu.livi.service;
 
+import com.anxu.livi.model.dto.goods.GoodsCommentDTO;
 import com.anxu.livi.model.dto.goods.GoodsOrderDTO;
 import com.anxu.livi.model.dto.goods.UserOrderDTO;
 import com.anxu.livi.model.dto.wePost.PageDTO;
@@ -38,4 +39,6 @@ public interface GoodsService {
     void pay(String orderNo);
     //    查询用户全部订单
     PageResult queryUserOrders(UserOrderDTO userOrderDTO);
+    //    评价商品
+    int commentOrders(GoodsCommentDTO goodsCommentDTO);
 }

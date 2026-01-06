@@ -1,6 +1,7 @@
 package com.anxu.livi.controller;
 
 import com.anxu.livi.common.annotation.OperateLog;
+import com.anxu.livi.model.dto.goods.GoodsCommentDTO;
 import com.anxu.livi.model.dto.goods.GoodsOrderDTO;
 import com.anxu.livi.model.dto.goods.UserOrderDTO;
 import com.anxu.livi.model.dto.wePost.PageDTO;
@@ -109,5 +110,17 @@ public class GoodsController {
         log.info("查询用户全部订单，参数：{}", userOrderDTO);
         PageResult pageResult = goodsService.queryUserOrders(userOrderDTO);
         return Result.success(pageResult);
+    }
+
+    // 评价商品
+    @PostMapping("/permission/goods/commentOrders")
+    public Result commentOrders(@RequestBody GoodsCommentDTO goodsCommentDTO){
+        log.info("评价商品，参数: {}",goodsCommentDTO);
+        int code = goodsService.commentOrders(goodsCommentDTO);
+        if(code != -1){
+            return Result.success();
+        }else {
+            return Result.error("评价失败");
+        }
     }
 }

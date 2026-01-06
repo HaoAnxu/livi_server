@@ -5,7 +5,9 @@ public enum OrderStatusEnum {
     PENDING_SHIP("pending_ship", 1, "待发货"),
     SHIPPING("shipping", 2, "配送中"),
     SIGNED("signed", 3, "已签收"),
-    CANCELLED("cancelled", 4, "已取消");
+    PENDING_EVAL("pending_eval", 4, "待评价"),
+    CANCELLED("cancelled", 5, "已取消");
+
 
     private final String sortRule; // 前端传参值
     private final Integer statusCode; // 数据库状态码

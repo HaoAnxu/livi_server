@@ -5,6 +5,7 @@ import cn.hutool.core.lang.Assert;
 import com.anxu.livi.common.emums.goods.OrderStatusEnum;
 import com.anxu.livi.mapper.goods.*;
 import com.anxu.livi.mapper.user.UserMapper;
+import com.anxu.livi.model.dto.goods.GoodsCommentDTO;
 import com.anxu.livi.model.dto.goods.GoodsOrderDTO;
 import com.anxu.livi.model.dto.goods.UserOrderDTO;
 import com.anxu.livi.model.dto.wePost.PageDTO;
@@ -421,7 +422,7 @@ public class GoodsServiceImpl implements GoodsService {
         QueryWrapper<GoodsOrderEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", userId);
         // 分类条件
-        if (sortRule != null && !sortRule.isEmpty()) {
+        if (sortRule != null && !sortRule.isEmpty() || sortRule.equals("all")) {
             Integer statusCode = OrderStatusEnum.getStatusCodeBySortRule(sortRule);
             if (statusCode != null) {
                 queryWrapper.eq("order_status", statusCode);
@@ -440,6 +441,16 @@ public class GoodsServiceImpl implements GoodsService {
         //提取所有goodsId
         Set<Integer> goodsIds = records.stream()
                 .map(GoodsOrderEntity::getGoodsId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        // 提取所有modelId
+        Set<Integer> modelIds = records.stream()
+                .map(GoodsOrderEntity::getGoodsModel)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        // 提取所有styleId
+        Set<Integer> styleIds = records.stream()
+                .map(GoodsOrderEntity::getGoodsStyle)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
@@ -469,8 +480,45 @@ public class GoodsServiceImpl implements GoodsService {
             goodsOrderVOList.add(vo);
         }
 
+        // 提取所有modelName
+        Map<Integer, String> modelNameMap = goodsModelMapper.selectBatchIds(modelIds)
+                .stream()
+                .collect(Collectors.toMap(GoodsModelEntity::getModelId, GoodsModelEntity::getGoodsModel));
+        // 提取所有styleName
+        Map<Integer, String> styleNameMap = goodsStyleMapper.selectBatchIds(styleIds)
+                .stream()
+                .collect(Collectors.toMap(GoodsStyleEntity::getStyleId, GoodsStyleEntity::getGoodsStyle));
+        // 填充VO中的modelName和styleName
+        goodsOrderVOList.forEach(vo -> {
+            vo.setGoodsModelName(modelNameMap.getOrDefault(vo.getGoodsModel(), ""));
+            vo.setGoodsStyleName(styleNameMap.getOrDefault(vo.getGoodsStyle(), ""));
+        });
+
         // 设置最终返回的VO列表
         pageResult.setRows(goodsOrderVOList);
         return pageResult;
+    }
+
+    // 评价商品
+    @Override
+    public int commentOrders(GoodsCommentDTO goodsCommentDTO) {
+        if (goodsCommentDTO == null || goodsCommentDTO.getOrderId() == null) {
+            return -1;
+        }
+        GoodsOrderEntity goodsOrderEntity = goodsOrderMapper.selectById(goodsCommentDTO.getOrderId());
+
+        // 订单不存在则返回0
+        if (goodsOrderEntity == null) {
+            return -1;
+        }
+
+        GoodsCommentEntity entity = BeanUtil.copyProperties(goodsCommentDTO, GoodsCommentEntity.class);
+        int insert = goodsCommentMapper.insert(entity);
+        if (insert != 0 && goodsOrderEntity != null && goodsOrderEntity.getOrderStatus() == 4) {
+            goodsOrderEntity.setOrderStatus(5);
+            int updateCount = goodsOrderMapper.updateById(goodsOrderEntity);
+            if (updateCount == 0) return -1;
+        }
+        return insert;
     }
 }
