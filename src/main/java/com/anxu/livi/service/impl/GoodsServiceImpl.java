@@ -17,6 +17,7 @@ import com.anxu.livi.model.vo.user.UserInfoVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +59,8 @@ public class GoodsServiceImpl implements GoodsService {
     private GoodsOrderMapper goodsOrderMapper;
     @Autowired
     private GoodsConnectMapper goodsConnectMapper;
-
+    @Autowired
+    private GoodsOrderLogisticsMapper goodsOrderLogisticsMapper;
 
     // 查询商品列表
     @Override
@@ -421,6 +423,7 @@ public class GoodsServiceImpl implements GoodsService {
         Page<GoodsOrderEntity> pageGoodsOrderEntity = new Page<>(page, pageSize);
         QueryWrapper<GoodsOrderEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", userId);
+        queryWrapper.orderByDesc("create_time");
         // 分类条件
         if (sortRule != null && !sortRule.isEmpty() || sortRule.equals("all")) {
             Integer statusCode = OrderStatusEnum.getStatusCodeBySortRule(sortRule);
@@ -520,5 +523,19 @@ public class GoodsServiceImpl implements GoodsService {
             if (updateCount == 0) return -1;
         }
         return insert;
+    }
+
+    // 查询订单物流信息
+    @Override
+    public List<GoodsOrderLogisticsVO> queryLogistics(String orderNo) {
+        if (StringUtils.isBlank(orderNo)) {
+            System.out.println("订单号为空，无法查询物流信息");
+            return Collections.emptyList();
+        }
+        QueryWrapper<GoodsOrderLogisticsEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("order_no", orderNo);
+        List<GoodsOrderLogisticsEntity> goodsOrderLogisticsEntityList = goodsOrderLogisticsMapper.selectList(queryWrapper);
+        System.out.println("查询到的物流信息列表: " + goodsOrderLogisticsEntityList);
+        return BeanUtil.copyToList(goodsOrderLogisticsEntityList, GoodsOrderLogisticsVO.class);
     }
 }

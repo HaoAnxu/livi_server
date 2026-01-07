@@ -7,7 +7,7 @@ import com.anxu.livi.model.dto.goods.UserOrderDTO;
 import com.anxu.livi.model.dto.wePost.PageDTO;
 import com.anxu.livi.model.vo.goods.GoodsBriefVO;
 import com.anxu.livi.model.vo.goods.GoodsDetailVO;
-import com.anxu.livi.model.vo.goods.GoodsOrderVO;
+import com.anxu.livi.model.vo.goods.GoodsOrderLogisticsVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -114,13 +114,21 @@ public class GoodsController {
 
     // 评价商品
     @PostMapping("/permission/goods/commentOrders")
-    public Result commentOrders(@RequestBody GoodsCommentDTO goodsCommentDTO){
-        log.info("评价商品，参数: {}",goodsCommentDTO);
+    public Result commentOrders(@RequestBody GoodsCommentDTO goodsCommentDTO) {
+        log.info("评价商品，参数: {}", goodsCommentDTO);
         int code = goodsService.commentOrders(goodsCommentDTO);
-        if(code != -1){
+        if (code != -1) {
             return Result.success();
-        }else {
+        } else {
             return Result.error("评价失败");
         }
+    }
+
+    //查询订单物流信息
+    @PostMapping("/permission/goods/queryLogistics")
+    public Result queryLogistics(@RequestParam String orderNo) {
+        log.info("查询订单物流信息，参数: {}", orderNo);
+        List<GoodsOrderLogisticsVO> goodsOrderLogisticsVOList = goodsService.queryLogistics(orderNo);
+        return Result.success(goodsOrderLogisticsVOList);
     }
 }

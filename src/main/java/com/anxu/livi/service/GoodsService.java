@@ -5,11 +5,8 @@ import com.anxu.livi.model.dto.goods.GoodsOrderDTO;
 import com.anxu.livi.model.dto.goods.UserOrderDTO;
 import com.anxu.livi.model.dto.wePost.PageDTO;
 import com.anxu.livi.model.result.PageResult;
-import com.anxu.livi.model.vo.goods.GoodsBriefVO;
-import com.anxu.livi.model.vo.goods.GoodsCommentsVO;
-import com.anxu.livi.model.vo.goods.GoodsDetailVO;
+import com.anxu.livi.model.vo.goods.*;
 import com.anxu.livi.model.dto.goods.GoodsQueryDTO;
-import com.anxu.livi.model.vo.goods.GoodsOrderVO;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -41,4 +38,6 @@ public interface GoodsService {
     PageResult queryUserOrders(UserOrderDTO userOrderDTO);
     //    评价商品
     int commentOrders(GoodsCommentDTO goodsCommentDTO);
+    //    查询订单物流信息
+    List<GoodsOrderLogisticsVO> queryLogistics(String orderNo);
 }
