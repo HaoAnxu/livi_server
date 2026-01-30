@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anxu.livi_module_user.mapper.device.DeviceInfoMapper">
+
+    <!--更新设备信息的设备状态为指定值 -->
+    <update id="updateByDeviceId">
+        update device_info
+        set device_status = #{deviceStatus}
+        where device_id = #{deviceId}
+    </update>
+    <!--根据用户id查询用户所有家庭信息-->
+    <select id="queryMyFamily" resultType="com.anxu.livi_model.model.vo.user.UserFamilyVO">
+        select uf.family_id,uf.family_name from user_family uf
+        inner join user_family_relation ufr
+        on uf.family_id = ufr.family_id
+        where ufr.user_id = #{userId}
+    </select>
+    <!--根据家庭id查询家庭所有房间信息-->
+    <select id="queryMyRoomList" resultType="com.anxu.livi_model.model.vo.user.UserFamilyRoomVO">
+        select ufr.room_id,ufr.room_name from user_family_room ufr
+        where ufr.family_id = #{familyId}
+    </select>
+</mapper>

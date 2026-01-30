@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anxu.livi_module_user.mapper.device.DeviceTaskMapper">
+
+    <!--    批量停止设备任务    -->
+    <update id="stopTaskByTaskId" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE device_task
+            SET task_status = #{item.taskStatus},
+            permit = #{item.permit},
+            update_time = NOW(),
+            for_next_date = #{item.forNextDate}
+            WHERE task_id = #{item.taskId}
+        </foreach>
+    </update>
+    <!--    批量启动设备任务    -->
+    <update id="startTaskByTaskId">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE device_task
+            SET
+            task_status = #{item.taskStatus},
+            update_time = NOW()
+            WHERE task_id = #{item.taskId}
+        </foreach>
+    </update>
+    <update id="batchUpdateTaskStatus">
+        <foreach collection="list" item="task" separator=";">
+            UPDATE device_task
+            SET task_status = #{task.taskStatus},
+            permit = #{task.permit},
+            for_next_date = #{task.forNextDate},
+            update_time = #{task.updateTime}
+            WHERE task_id = #{task.taskId}
+        </foreach>
+    </update>
+</mapper>
